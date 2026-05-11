@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AAC 輔助系統 - 完整語音播放版</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* 按鈕基本樣式 */
+        .phrase-btn {
+            height: 130px;
+            font-size: 2.2rem;
+            font-weight: 900;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 24px;
+            background-color: white;
+            box-shadow: 0 6px 0 #cbd5e1;
+            border: 3px solid #e2e8f0;
+            transition: all 0.05s;
+            text-align: center;
+            padding: 10px;
+            color: #1e293b;
+        }
+
+        .phrase-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 #cbd5e1;
+            background-color: #f8fafc;
+        }
+
+        .nav-btn {
+            height: 110px;
+            font-size: 2rem;
+            font-weight: bold;
+            color: white;
+            border-radius: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        /* 句子顯示與控制區 */
+        #display-box {
+            min-height: 130px;
+            font-size: 2.8rem;
+            background: #ffffff;
+            border: 5px solid #3b82f6;
+            border-radius: 24px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            font-weight: bold;
+            color: #1d4ed8;
+            overflow-x: auto;
+        }
+
+        /* 播放與清除按鈕 */
+        .control-btn {
+            height: 130px;
+            width: 120px;
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: white;
+            border-radius: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 6px 0 rgba(0, 0, 0, 0.2);
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
+</head>
+
+<body class="h-screen flex flex-col p-4 bg-slate-100 overflow-hidden">
+
+    <!-- 頂部：句子輸入與語音控制列 -->
+    <div class="flex gap-3 mb-6">
+        <!-- 句子顯示 -->
+        <div id="display-box" class="flex-grow shadow-md no-scrollbar">
+            <span id="output"></span>
+        </div>
+
+        <!-- 播放按鈕 (藍色) -->
+        <button onclick="playFullSentence()" class="control-btn bg-blue-600 active:bg-blue-800">
+            播放<br>語音
+        </button>
+
+        <!-- 清除按鈕 (紅色) -->
+        <button onclick="clearAll()" class="control-btn bg-red-500 active:bg-red-700">
+            清除<br>文字
+        </button>
+    </div>
+
+    <!-- 中間：3x3 常用語區域 -->
+    <div id="grid-container" class="flex-grow grid grid-cols-3 gap-6 mb-6 p-2 overflow-y-auto no-scrollbar">
+        <!-- JS 動態生成 -->
+    </div>
+
+    <!-- 底部：固定分類 -->
+    <div class="grid grid-cols-5 gap-3 mb-2">
+        <button onclick="updateGrid('common')" class="nav-btn bg-slate-500">常用</button>
+        <button onclick="updateGrid('eat')" class="nav-btn bg-orange-500">食</button>
+        <button onclick="updateGrid('cloth')" class="nav-btn bg-blue-500">衣</button>
+        <button onclick="updateGrid('live')" class="nav-btn bg-green-500">住</button>
+        <button onclick="updateGrid('move')" class="nav-btn bg-purple-500">行</button>
+    </div>
+
+    <script>
+        const menuData = {
+            'common': ['你好', '謝謝', '不客氣', '對不起', '請幫我', '我想休息', '是的', '不是', '沒關係'],
+            'eat': ['肚子餓', '我想喝水', '想吃藥', '想吃水果', '太燙了', '太冷了', '吃飽了', '慢慢吃', '想喝湯'],
+            'cloth': ['太冷了', '太熱了', '換衣服', '穿外套', '脫衣服', '尿布濕了', '想洗澡', '太緊了', '穿襪子'],
+            'live': ['想睡覺', '上廁所', '開電視', '開燈', '關燈', '幫我翻身', '扶我起來', '回房間', '拿眼鏡'],
+            'move': ['去散步', '坐輪椅', '去醫院', '要回家', '慢一點', '停下來', '出門', '扶一下', '拿柺杖']
+        };
+
+        let lastClick = 0;
+
+        // 更新按鈕區
+        function updateGrid(category) {
+            const container = document.getElementById('grid-container');
+            container.innerHTML = '';
+
+            menuData[category].forEach(text => {
+                const btn = document.createElement('div');
+                btn.className = 'phrase-btn';
+                btn.innerText = text;
+                btn.onclick = () => {
+                    const now = Date.now();
+                    if (now - lastClick < 700) return; // 抗震顫防連點
+                    lastClick = now;
+
+                    document.getElementById('output').innerText += text + ' ';
+                    // 點擊當下也發出簡短聲音回饋
+                    speakText(text);
+                };
+                container.appendChild(btn);
+            });
+        }
+
+        // 核心語音功能：朗讀整段文字
+        function playFullSentence() {
+            const text = document.getElementById('output').innerText;
+            if (text.trim() === "") {
+                speakText("內容是空的");
+                return;
+            }
+            speakText(text);
+        }
+
+        // 通用語音呼叫函數
+        function speakText(text) {
+            // 先停止正在播放的聲音，避免重疊
+            window.speechSynthesis.cancel();
+
+            const msg = new SpeechSynthesisUtterance(text);
+            msg.lang = 'zh-TW';
+            msg.rate = 0.85; // 語速：0.85 較適合長輩聽讀
+            msg.pitch = 1.0;
+            window.speechSynthesis.speak(msg);
+        }
+
+        function clearAll() {
+            document.getElementById('output').innerText = '';
+            window.speechSynthesis.cancel();
+        }
+
+        window.onload = () => updateGrid('common');
+    </script>
+</body>
+
+</html>
