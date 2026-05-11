@@ -2,15 +2,19 @@ from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS # 需要 pip install flask-cors
 import datetime
 
-app = Flask(__name__)
-CORS(app) # 允許跨來源資源共用，讓 HTML 能存取 API
+# 關鍵修正：加入 template_folder='.'
+# 這會告訴 Flask 直接在跟 app.py 同層的地方找 HTML 檔案
+app = Flask(__name__, template_folder='.')
+CORS(app)
+
+
 
 # 模擬資料庫
 usage_logs = []
 
 @app.route('/')
 def index():
-    # Flask 會自動到 templates/ 目錄下找 index.html
+    # 現在 Flask 可以在同層目錄找到 index.html 了
     return render_template('index.html')
     
 @app.route('/api/log', methods=['POST'])
