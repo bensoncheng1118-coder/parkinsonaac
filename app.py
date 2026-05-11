@@ -8,6 +8,11 @@ CORS(app) # 允許跨來源資源共用，讓 HTML 能存取 API
 # 模擬資料庫
 usage_logs = []
 
+@app.route('/')
+def index():
+    # Flask 會自動到 templates/ 目錄下找 index.html
+    return render_template('index.html')
+    
 @app.route('/api/log', methods=['POST'])
 def log_message():
     data = request.json
