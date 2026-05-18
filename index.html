@@ -9,8 +9,9 @@
     <link rel="stylesheet"
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@48,700,0,0" />
     
-    <!-- 修正：正確引入 MediaPipe Vision 庫與必要組件 -->
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.8/wasm/vision_bundle.js" crossorigin="anonymous"></script>
+    <!-- 修正：引入更穩定、相容性更好的 MediaPipe 臉部網格庫 -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
     <style>
         .phrase-btn, .nav-btn, .ctrl-btn {
             position: relative;
@@ -116,6 +117,7 @@
             border: 2px solid #cbd5e1;
             z-index: 9998;
             background: black;
+            display: block;
         }
         #loading-status {
             position: fixed;
@@ -191,8 +193,9 @@
         let gazeStartTime = 0;
         const DWEL_TIME = 1500; 
 
-        const SENSITIVITY_X = 2.5; 
-        const SENSITIVITY_Y = 3.0;
+        // 靈敏度控制（數值越大，頭稍微動一點點，游標就飛很遠）
+        const SENSITIVITY_X = 1.8; 
+        const SENSITIVITY_Y = 2.2;
 
         function updateGrid(category) {
             const container = document.getElementById('grid-container');
@@ -250,61 +253,63 @@
             gazeStartTime = 0;
         }
 
-        // --- 修正後的 MediaPipe 初始化邏輯 ---
-        async function initHeadTracking() {
-            // 修正：從全域變數正確獲取 MediaPipe 模組
-            const vision = await mpTasksVision.FilesetResolver.forVisionTasks(
-                "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.8/wasm"
-            );
-            
-            const faceLandmarker = await mpTasksVision.FaceLandmarker.createFromOptions(vision, {
-                outputFaceBlendshapes: false,
-                outputFacialTransformationMatrixes: true,
-                runningMode: "VIDEO",
-                numFaces: 1
+        // --- 全新更穩定的 MediaPipe FaceMesh 初始化邏輯 ---
+        function initHeadTracking() {
+            const videoElement = document.getElementById('webcam-preview');
+            const cursorElement = document.getElementById('head-cursor');
+            const loadingElement = document.getElementById('loading-status');
+
+            const faceMesh = new FaceMesh({
+                locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`
             });
 
-            document.getElementById('loading-status').style.display = 'none';
-            const video = document.getElementById('webcam-preview');
-            const cursor = document.getElementById('head-cursor');
-            cursor.style.display = 'block';
-
-            // 請求開啟鏡頭
-            const stream = await navigator.mediaDevices.getUserMedia({ 
-                video: { width: 640, height: 480, facingMode: "user" } 
+            faceMesh.setOptions({
+                maxNumFaces: 1,
+                refineLandmarks: false,
+                minDetectionConfidence: 0.5,
+                minTrackingConfidence: 0.5
             });
-            video.srcObject = stream;
 
-            let lastVideoTime = -1;
-            
-            function predictWebcam() {
-                if (video.currentTime !== lastVideoTime) {
-                    lastVideoTime = video.currentTime;
-                    const startTimeMs = performance.now();
-                    const results = faceLandmarker.detectForVideo(video, startTimeMs);
-
-                    if (results.facialTransformationMatrixes && results.facialTransformationMatrixes.length > 0) {
-                        const matrix = results.facialTransformationMatrixes[0].data;
-                        
-                        // 旋轉計算
-                        const yaw = Math.asin(-matrix[2]); 
-                        const pitch = Math.asin(matrix[6]);
-
-                        // 計算滑鼠座標
-                        const screenX = window.innerWidth / 2 + (yaw * window.innerWidth * SENSITIVITY_X);
-                        const screenY = window.innerHeight / 2 - (pitch * window.innerHeight * SENSITIVITY_Y);
-
-                        cursor.style.left = `${Math.max(0, Math.min(window.innerWidth, screenX))}px`;
-                        cursor.style.top = `${Math.max(0, Math.min(window.innerHeight, screenY))}px`;
-
-                        checkHover(screenX, screenY);
-                    } else {
-                        resetGaze();
-                    }
+            faceMesh.onResults((results) => {
+                // 成功抓到臉，隱藏載入提示，顯示虛擬綠色游標
+                if (loadingElement.style.display !== 'none') {
+                    loadingElement.style.display = 'none';
+                    cursorElement.style.display = 'block';
                 }
-                requestAnimationFrame(predictWebcam);
-            }
-            requestAnimationFrame(predictWebcam);
+
+                if (results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
+                    const landmarks = results.multiFaceLandmarks[0];
+                    
+                    // 鼻尖特徵點（MediaPipe 索引為 4）
+                    const nose = landmarks[4];
+
+                    // 透過鼻尖在畫面的比例，計算出對應的螢幕 X, Y 座標
+                    // 為了配合操作直覺，X 軸進行了鏡像反轉計算 (1 - nose.x)
+                    const screenX = window.innerWidth / 2 + ((1 - nose.x) - 0.5) * window.innerWidth * SENSITIVITY_X;
+                    const screenY = window.innerHeight / 2 + (nose.y - 0.5) * window.innerHeight * SENSITIVITY_Y;
+
+                    // 移動綠色小圓點
+                    cursorElement.style.left = `${Math.max(0, Math.min(window.innerWidth, screenX))}px`;
+                    cursorElement.style.top = `${Math.max(0, Math.min(window.innerHeight, screenY))}px`;
+
+                    checkHover(screenX, screenY);
+                } else {
+                    resetGaze();
+                }
+            });
+
+            // 啟動視訊鏡頭串流
+            const camera = new Camera(videoElement, {
+                onFrame: async () => {
+                    await faceMesh.send({ image: videoElement });
+                },
+                width: 640,
+                height: 480
+            });
+            
+            camera.start().catch(err => {
+                showError();
+            });
         }
 
         function checkHover(x, y) {
@@ -332,19 +337,25 @@
             }
         }
 
+        function showError() {
+            document.getElementById('loading-status').innerHTML = `
+                <div class="text-red-400 font-bold mb-2">鏡頭啟動失敗</div>
+                <div class="text-sm text-gray-300 text-left">
+                    1. 由於安全性限制，本地檔案 (file://) 無法開啟鏡頭。<br>
+                    2. 請先將檔案部署到 <span class="text-yellow-300">GitHub Pages</span>（HTTPS環境）再開啟。<br>
+                    3. 開啟網頁後，請務必點擊瀏覽器的「允許」鏡頭權限。
+                </div>
+            `;
+        }
+
         window.onload = () => {
             updateGrid('common');
-            initHeadTracking().catch(err => {
-                console.error(err);
-                document.getElementById('loading-status').innerHTML = `
-                    <div class="text-red-400 font-bold mb-2">鏡頭或模型啟動失敗</div>
-                    <div class="text-sm text-gray-300 text-left">
-                        1. 請確認是否有點擊「允許」視訊鏡頭權限。<br>
-                        2. 網頁必須在 <span class="text-yellow-300">localhost</span> 或 <span class="text-yellow-300">HTTPS 安全連線</span> 下才能開啟鏡頭。<br>
-                        3. 請確認網路連線正常（需下載 AI 模型）。
-                    </div>
-                `;
-            });
+            // 執行初始化
+            try {
+                initHeadTracking();
+            } catch (e) {
+                showError();
+            }
         };
     </script>
 </body>
