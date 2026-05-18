@@ -4,12 +4,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>帕金森氏症專用 AAC 系統</title>
+    <title>帕金森氏症專用 AAC 頭控系統</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet"
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@48,700,0,0" />
+    
+    <!-- 修正：正確引入 MediaPipe Vision 庫與必要組件 -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.8/wasm/vision_bundle.js" crossorigin="anonymous"></script>
     <style>
-        /* 3x3 常用語按鈕樣式 */
+        .phrase-btn, .nav-btn, .ctrl-btn {
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+        }
+        
         .phrase-btn {
             height: 150px;
             display: flex;
@@ -22,18 +30,32 @@
             border: 3px solid #e2e8f0;
             transition: all 0.05s;
             gap: 10px;
-            cursor: pointer;
         }
 
-        .phrase-btn:active {
-            transform: translateY(4px);
-            box-shadow: 0 2px 0 #cbd5e1;
-            background-color: #f8fafc;
+        .gaze-progress {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 0%;
+            background-color: rgba(34, 197, 94, 0.2); 
+            transition: height 0.1s linear;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .btn-content {
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
         }
 
         .icon-main {
             font-size: 3.5rem !important;
-            color: #3b82f6;
+            color: #22c55e; 
         }
 
         .text-main {
@@ -42,7 +64,6 @@
             color: #1e293b;
         }
 
-        /* 下方導覽按鈕 */
         .nav-btn {
             height: 100px;
             font-size: 1.8rem;
@@ -52,16 +73,15 @@
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
 
-        /* 句子顯示盒 */
         #display-box {
             min-height: 120px;
             font-size: 2.5rem;
             background: white;
-            border: 5px solid #3b82f6;
+            border: 5px solid #22c55e;
             border-radius: 24px;
             padding: 15px;
             font-weight: bold;
-            color: #1d4ed8;
+            color: #15803d;
             display: flex;
             align-items: center;
             overflow-x: auto;
@@ -70,10 +90,53 @@
         .no-scrollbar::-webkit-scrollbar {
             display: none;
         }
+
+        #head-cursor {
+            position: fixed;
+            width: 24px;
+            height: 24px;
+            background-color: rgba(34, 197, 94, 0.8);
+            border: 3px solid white;
+            border-radius: 50%;
+            pointer-events: none; 
+            z-index: 9999;
+            transform: translate(-50%, -50%);
+            display: none;
+            box-shadow: 0 0 10px rgba(0,0,0,0.3);
+        }
+
+        #webcam-preview {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            width: 120px;
+            height: 90px;
+            transform: scaleX(-1); 
+            border-radius: 8px;
+            border: 2px solid #cbd5e1;
+            z-index: 9998;
+            background: black;
+        }
+        #loading-status {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 20px 40px;
+            border-radius: 16px;
+            font-size: 1.5rem;
+            z-index: 10000;
+        }
     </style>
 </head>
 
 <body class="h-screen flex flex-col p-4 bg-slate-100 overflow-hidden text-slate-800">
+
+    <div id="loading-status">AI 頭部追蹤模型載入中，請稍候...</div>
+    <div id="head-cursor"></div>
+    <video id="webcam-preview" autoplay playsinline muted></video>
 
     <!-- 頂部：控制列 -->
     <div class="flex gap-3 mb-4">
@@ -81,18 +144,22 @@
             <span id="output"></span>
         </div>
 
-        <!-- 播放按鈕 -->
-        <button onclick="playAll()"
-            class="w-28 bg-blue-600 text-white rounded-2xl font-bold flex flex-col items-center justify-center gap-1 shadow-lg active:bg-blue-800">
-            <span class="material-symbols-outlined" style="font-size: 2.5rem;">play_circle</span>
-            <span>播放</span>
+        <button id="btn-play" onclick="playAll()"
+            class="ctrl-btn w-28 bg-green-600 text-white rounded-2xl font-bold flex flex-col items-center justify-center gap-1 shadow-lg">
+            <div class="gaze-progress"></div>
+            <div class="btn-content">
+                <span class="material-symbols-outlined" style="font-size: 2.5rem;">play_circle</span>
+                <span>播放</span>
+            </div>
         </button>
 
-        <!-- 清除按鈕 -->
-        <button onclick="clearAll()"
-            class="w-28 bg-red-500 text-white rounded-2xl font-bold flex flex-col items-center justify-center gap-1 shadow-lg active:bg-red-700">
-            <span class="material-symbols-outlined" style="font-size: 2.5rem;">delete_sweep</span>
-            <span>清除</span>
+        <button id="btn-clear" onclick="clearAll()"
+            class="ctrl-btn w-28 bg-red-500 text-white rounded-2xl font-bold flex flex-col items-center justify-center gap-1 shadow-lg">
+            <div class="gaze-progress"></div>
+            <div class="btn-content">
+                <span class="material-symbols-outlined" style="font-size: 2.5rem;">delete_sweep</span>
+                <span>清除</span>
+            </div>
         </button>
     </div>
 
@@ -103,11 +170,11 @@
 
     <!-- 底部：分類導覽 -->
     <div class="grid grid-cols-5 gap-2 pb-2">
-        <button onclick="updateGrid('common')" class="nav-btn bg-gray-500 active:opacity-80">常用</button>
-        <button onclick="updateGrid('eat')" class="nav-btn bg-orange-500 active:opacity-80">食</button>
-        <button onclick="updateGrid('cloth')" class="nav-btn bg-blue-500 active:opacity-80">衣</button>
-        <button onclick="updateGrid('live')" class="nav-btn bg-green-500 active:opacity-80">住</button>
-        <button onclick="updateGrid('move')" class="nav-btn bg-purple-500 active:opacity-80">行</button>
+        <button id="nav-common" onclick="updateGrid('common')" class="nav-btn bg-gray-500"><div class="gaze-progress"></div><span class="btn-content">常用</span></button>
+        <button id="nav-eat" onclick="updateGrid('eat')" class="nav-btn bg-orange-500"><div class="gaze-progress"></div><span class="btn-content">食</span></button>
+        <button id="nav-cloth" onclick="updateGrid('cloth')" class="nav-btn bg-blue-500"><div class="gaze-progress"></div><span class="btn-content">衣</span></button>
+        <button id="nav-live" onclick="updateGrid('live')" class="nav-btn bg-green-500"><div class="gaze-progress"></div><span class="btn-content">住</span></button>
+        <button id="nav-move" onclick="updateGrid('move')" class="nav-btn bg-purple-500"><div class="gaze-progress"></div><span class="btn-content">行</span></button>
     </div>
 
     <script>
@@ -120,35 +187,39 @@
         };
 
         let lastClick = 0;
+        let currentHoveredElement = null;
+        let gazeStartTime = 0;
+        const DWEL_TIME = 1500; 
+
+        const SENSITIVITY_X = 2.5; 
+        const SENSITIVITY_Y = 3.0;
 
         function updateGrid(category) {
             const container = document.getElementById('grid-container');
             container.innerHTML = '';
-
-            menuData[category].forEach(([text, iconName]) => {
+            menuData[category].forEach(([text, iconName], index) => {
                 const btn = document.createElement('div');
                 btn.className = 'phrase-btn';
+                btn.id = `phrase-btn-${index}`;
                 btn.innerHTML = `
-                    <span class="material-symbols-outlined icon-main">${iconName}</span>
-                    <span class="text-main">${text}</span>
+                    <div class="gaze-progress"></div>
+                    <div class="btn-content">
+                        <span class="material-symbols-outlined icon-main">${iconName}</span>
+                        <span class="text-main">${text}</span>
+                    </div>
                 `;
-                btn.onclick = () => {
-                    const now = Date.now();
-                    if (now - lastClick < 700) return;
-                    lastClick = now;
-
-                    document.getElementById('output').innerText += text + ' ';
-                    speakText(text);
-
-                    // 同步發送到後端紀錄
-                    fetch('/api/log', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ message: text })
-                    }).catch(e => console.log("紀錄暫時無法傳送"));
-                };
+                btn.onclick = () => triggerButtonAction(btn, text);
                 container.appendChild(btn);
             });
+        }
+
+        function triggerButtonAction(element, text) {
+            const now = Date.now();
+            if (now - lastClick < 700) return;
+            lastClick = now;
+            document.getElementById('output').innerText += text + ' ';
+            speakText(text);
+            resetGaze();
         }
 
         function speakText(text) {
@@ -160,17 +231,121 @@
         }
 
         function playAll() {
-            const fullText = document.getElementById('output').innerText;
-            speakText(fullText || "請先點選按鈕");
+            speakText(document.getElementById('output').innerText || "請先點選按鈕");
+            resetGaze();
         }
 
         function clearAll() {
             document.getElementById('output').innerText = '';
             window.speechSynthesis.cancel();
+            resetGaze();
         }
 
-        window.onload = () => updateGrid('common');
+        function resetGaze() {
+            if (currentHoveredElement) {
+                const progressEl = currentHoveredElement.querySelector('.gaze-progress');
+                if (progressEl) progressEl.style.height = '0%';
+            }
+            currentHoveredElement = null;
+            gazeStartTime = 0;
+        }
+
+        // --- 修正後的 MediaPipe 初始化邏輯 ---
+        async function initHeadTracking() {
+            // 修正：從全域變數正確獲取 MediaPipe 模組
+            const vision = await mpTasksVision.FilesetResolver.forVisionTasks(
+                "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.8/wasm"
+            );
+            
+            const faceLandmarker = await mpTasksVision.FaceLandmarker.createFromOptions(vision, {
+                outputFaceBlendshapes: false,
+                outputFacialTransformationMatrixes: true,
+                runningMode: "VIDEO",
+                numFaces: 1
+            });
+
+            document.getElementById('loading-status').style.display = 'none';
+            const video = document.getElementById('webcam-preview');
+            const cursor = document.getElementById('head-cursor');
+            cursor.style.display = 'block';
+
+            // 請求開啟鏡頭
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+                video: { width: 640, height: 480, facingMode: "user" } 
+            });
+            video.srcObject = stream;
+
+            let lastVideoTime = -1;
+            
+            function predictWebcam() {
+                if (video.currentTime !== lastVideoTime) {
+                    lastVideoTime = video.currentTime;
+                    const startTimeMs = performance.now();
+                    const results = faceLandmarker.detectForVideo(video, startTimeMs);
+
+                    if (results.facialTransformationMatrixes && results.facialTransformationMatrixes.length > 0) {
+                        const matrix = results.facialTransformationMatrixes[0].data;
+                        
+                        // 旋轉計算
+                        const yaw = Math.asin(-matrix[2]); 
+                        const pitch = Math.asin(matrix[6]);
+
+                        // 計算滑鼠座標
+                        const screenX = window.innerWidth / 2 + (yaw * window.innerWidth * SENSITIVITY_X);
+                        const screenY = window.innerHeight / 2 - (pitch * window.innerHeight * SENSITIVITY_Y);
+
+                        cursor.style.left = `${Math.max(0, Math.min(window.innerWidth, screenX))}px`;
+                        cursor.style.top = `${Math.max(0, Math.min(window.innerHeight, screenY))}px`;
+
+                        checkHover(screenX, screenY);
+                    } else {
+                        resetGaze();
+                    }
+                }
+                requestAnimationFrame(predictWebcam);
+            }
+            requestAnimationFrame(predictWebcam);
+        }
+
+        function checkHover(x, y) {
+            const targetEl = document.elementFromPoint(x, y);
+            const clickableBtn = targetEl?.closest('.phrase-btn, .nav-btn, .ctrl-btn');
+
+            if (clickableBtn) {
+                if (currentHoveredElement === clickableBtn) {
+                    const duration = Date.now() - gazeStartTime;
+                    const progress = Math.min((duration / DWEL_TIME) * 100, 100);
+                    
+                    const progressEl = clickableBtn.querySelector('.gaze-progress');
+                    if (progressEl) progressEl.style.height = `${progress}%`;
+
+                    if (duration >= DWEL_TIME) {
+                        clickableBtn.click();
+                    }
+                } else {
+                    resetGaze();
+                    currentHoveredElement = clickableBtn;
+                    gazeStartTime = Date.now();
+                }
+            } else {
+                resetGaze();
+            }
+        }
+
+        window.onload = () => {
+            updateGrid('common');
+            initHeadTracking().catch(err => {
+                console.error(err);
+                document.getElementById('loading-status').innerHTML = `
+                    <div class="text-red-400 font-bold mb-2">鏡頭或模型啟動失敗</div>
+                    <div class="text-sm text-gray-300 text-left">
+                        1. 請確認是否有點擊「允許」視訊鏡頭權限。<br>
+                        2. 網頁必須在 <span class="text-yellow-300">localhost</span> 或 <span class="text-yellow-300">HTTPS 安全連線</span> 下才能開啟鏡頭。<br>
+                        3. 請確認網路連線正常（需下載 AI 模型）。
+                    </div>
+                `;
+            });
+        };
     </script>
 </body>
-
 </html>
