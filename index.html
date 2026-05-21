@@ -163,16 +163,17 @@
 
     <!-- 頂部：控制列 -->
     <div class="flex gap-3 mb-2">
+        <!-- 模式切換下拉選單 (移至輸入框左邊) -->
+        <select id="btn-mode" onchange="switchControlMode(this.value)"
+            class="w-32 h-[60px] bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-center shadow-lg transition-colors cursor-pointer outline-none px-2">
+            <option value="touch" selected>模式：觸控</option>
+            <option value="head">模式：頭控</option>
+            <option value="eye">模式：眼控</option>
+        </select>
+
         <div id="display-box" class="flex-grow shadow-md no-scrollbar">
             <span id="output"></span>
         </div>
-
-        <!-- 模式切換按鈕 -->
-        <button id="btn-mode" onclick="switchControlMode()"
-            class="w-32 h-[60px] bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold flex flex-col items-center justify-center shadow-lg transition-colors">
-            <span class="material-symbols-outlined" id="mode-icon" style="font-size: 1.6rem;">ads_click</span>
-            <span class="text-xs" id="mode-text">模式：觸控</span>
-        </button>
 
         <button id="btn-play" onclick="playAll()"
             class="ctrl-btn w-24 h-[60px] bg-green-600 text-white rounded-xl font-bold flex flex-col items-center justify-center shadow-lg">
@@ -256,28 +257,24 @@
             }
         }
 
-        // 切換控制模式
-        function switchControlMode() {
+        // 切換控制模式 (已改為接收 select 傳入的值)
+        function switchControlMode(selectedMode) {
             resetGaze();
-            if (currentMode === 'touch') {
-                currentMode = 'head';
+            if (selectedMode) {
+                currentMode = selectedMode;
+            }
+            
+            if (currentMode === 'head') {
                 SENSITIVITY_X = 6.0;
                 SENSITIVITY_Y = 6.0;
-                document.getElementById('mode-text').innerText = '模式：頭控';
-                document.getElementById('mode-icon').innerText = 'face';
                 startCameraAndAI();
-            } else if (currentMode === 'head') {
-                currentMode = 'eye';
+            } else if (currentMode === 'eye') {
                 // 眼控放大靈敏度（搭配動態校準演算法）
                 SENSITIVITY_X = 35.0;
                 SENSITIVITY_Y = 28.0;
-                document.getElementById('mode-text').innerText = '模式：眼控';
-                document.getElementById('mode-icon').innerText = 'visibility';
                 startCameraAndAI();
             } else {
                 currentMode = 'touch';
-                document.getElementById('mode-text').innerText = '模式：觸控';
-                document.getElementById('mode-icon').innerText = 'ads_click';
                 stopCameraAndAI();
             }
         }
