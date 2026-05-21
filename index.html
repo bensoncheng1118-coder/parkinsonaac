@@ -136,13 +136,6 @@
             z-index: 10000;
             display: none;
         }
-
-        #lang-toggle-container {
-            position: fixed;
-            bottom: 145px;
-            right: 10px;
-            z-index: 9999;
-        }
     </style>
 </head>
 
@@ -152,18 +145,16 @@
     <div id="head-cursor"></div>
     <video id="webcam-preview" autoplay playsinline muted></video>
 
-    <!-- 照顧者專用：切換語言小按鈕 -->
-    <div id="lang-toggle-container">
-        <button onclick="toggleLanguage()" id="btn-lang-toggle"
-            class="px-3 py-1 bg-slate-700 hover:bg-slate-800 text-white text-xs font-bold rounded-lg shadow-md transition-all flex items-center gap-1">
-            <span class="material-symbols-outlined" style="font-size: 14px;">translate</span>
-            發音：<span id="current-lang-text">中文(國語)</span>
-        </button>
-    </div>
-
     <!-- 頂部：控制列 -->
     <div class="flex gap-3 mb-2">
-        <!-- 模式切換下拉選單 (移至輸入框左邊) -->
+        <!-- 語言切換按鈕（已移至下拉選單左邊，高度設為 60px 以與其他控制元件一致） -->
+        <button onclick="toggleLanguage()" id="btn-lang-toggle"
+            class="w-36 h-[60px] bg-slate-700 hover:bg-slate-800 text-white font-bold rounded-xl shadow-lg transition-all flex flex-col items-center justify-center gap-1">
+            <span class="material-symbols-outlined" style="font-size: 1.4rem;">translate</span>
+            <span class="text-xs" id="current-lang-text">中文(國語)</span>
+        </button>
+
+        <!-- 模式切換下拉選單 -->
         <select id="btn-mode" onchange="switchControlMode(this.value)"
             class="w-32 h-[60px] bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-center shadow-lg transition-colors cursor-pointer outline-none px-2">
             <option value="touch" selected>模式：觸控</option>
@@ -308,6 +299,7 @@
             resetGaze();
         }
 
+        "use strict";
         function speakText(text) {
             window.speechSynthesis.cancel();
             const msg = new SpeechSynthesisUtterance(text);
@@ -340,14 +332,15 @@
             resetGaze();
         }
 
-        function clearInterval() {
+        /* 修正與瀏覽器原生的名詞衝突 */
+        function clearDisplay() {
             document.getElementById('output').innerText = '';
             window.speechSynthesis.cancel();
             resetGaze();
         }
         
         function clearAll() {
-            clearInterval();
+            clearDisplay();
         }
 
         function resetGaze() {
