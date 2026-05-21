@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>帕金森氏症專用 AAC 頭控系統</title>
+    <title>帕金森氏症專用 AAC 多功能控制系統</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet"
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@48,700,0,0" />
@@ -21,10 +21,10 @@
             cursor: pointer;
         }
 
-        /* 中間按鈕維持完美的 1:1 正方形 */
+        /* 調整中間按鈕：移除正方形限制，使其呈現大又寬的長方形並充滿網格 */
         .phrase-btn {
+            width: 100%;
             height: 100%;
-            aspect-ratio: 1 / 1;
             flex-shrink: 0;
             display: flex;
             flex-direction: column;
@@ -113,18 +113,14 @@
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
         }
 
+        /* 完全隱藏右下角的視訊畫面，不影響追蹤功能 */
         #webcam-preview {
             position: fixed;
-            bottom: 10px;
-            right: 10px;
-            width: 120px;
-            height: 90px;
-            transform: scaleX(-1);
-            border-radius: 8px;
-            border: 2px solid #cbd5e1;
-            z-index: 9998;
-            background: black;
-            display: none;
+            width: 1px;
+            height: 1px;
+            opacity: 0;
+            pointer-events: none;
+            z-index: -1;
         }
 
         #loading-status {
@@ -138,6 +134,7 @@
             border-radius: 16px;
             font-size: 1.5rem;
             z-index: 10000;
+            display: none;
         }
 
         #lang-toggle-container {
@@ -151,7 +148,7 @@
 
 <body class="h-screen flex flex-col p-4 bg-slate-100 overflow-hidden text-slate-800">
 
-    <div id="loading-status">AI 頭部追蹤模型載入中，請稍候...</div>
+    <div id="loading-status">AI 模型載入中，請稍候...</div>
     <div id="head-cursor"></div>
     <video id="webcam-preview" autoplay playsinline muted></video>
 
@@ -169,6 +166,13 @@
         <div id="display-box" class="flex-grow shadow-md no-scrollbar">
             <span id="output"></span>
         </div>
+
+        <!-- 模式切換按鈕 -->
+        <button id="btn-mode" onclick="switchControlMode()"
+            class="w-32 h-[60px] bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold flex flex-col items-center justify-center shadow-lg transition-colors">
+            <span class="material-symbols-outlined" id="mode-icon" style="font-size: 1.6rem;">ads_click</span>
+            <span class="text-xs" id="mode-text">模式：觸控</span>
+        </button>
 
         <button id="btn-play" onclick="playAll()"
             class="ctrl-btn w-24 h-[60px] bg-green-600 text-white rounded-xl font-bold flex flex-col items-center justify-center shadow-lg">
@@ -189,9 +193,9 @@
         </button>
     </div>
 
-    <!-- 中間：按鈕橫向排版區 -->
+    <!-- 中間：按鈕網格排版區 -->
     <div id="grid-container"
-        class="flex-grow flex flex-row items-stretch gap-4 mb-4 overflow-x-auto no-scrollbar p-1 pb-3 scroll-smooth">
+        class="flex-grow grid grid-cols-3 grid-rows-3 gap-4 mb-4 p-1 pb-3">
         <!-- JS 動態生成 -->
     </div>
 
@@ -226,12 +230,19 @@
         let lastClick = 0;
         let currentHoveredElement = null;
         let gazeStartTime = 0;
-        const DWEL_TIME = 2200;
+        const DWEL_TIME = 2200; // 注視觸發時間 2.2 秒
 
-        const SENSITIVITY_X = 6.0;
-        const SENSITIVITY_Y = 6.0;
+        // 靈敏度設定
+        let SENSITIVITY_X = 6.0;
+        let SENSITIVITY_Y = 6.0;
 
         let currentLanguage = 'zh-TW';
+        
+        // 控制模式：'touch' (觸控), 'head' (頭控), 'eye' (眼控)
+        let currentMode = 'touch'; 
+        let faceMesh = null;
+        let camera = null;
+        let isCameraRunning = false;
 
         function toggleLanguage() {
             if (currentLanguage === 'zh-TW') {
@@ -242,6 +253,32 @@
                 currentLanguage = 'zh-TW';
                 document.getElementById('current-lang-text').innerText = '中文(國語)';
                 document.getElementById('btn-lang-toggle').classList.replace('bg-orange-600', 'bg-slate-700');
+            }
+        }
+
+        // 切換控制模式
+        function switchControlMode() {
+            resetGaze();
+            if (currentMode === 'touch') {
+                currentMode = 'head';
+                SENSITIVITY_X = 6.0;
+                SENSITIVITY_Y = 6.0;
+                document.getElementById('mode-text').innerText = '模式：頭控';
+                document.getElementById('mode-icon').innerText = 'face';
+                startCameraAndAI();
+            } else if (currentMode === 'head') {
+                currentMode = 'eye';
+                // 眼控放大靈敏度（搭配動態校準演算法）
+                SENSITIVITY_X = 35.0;
+                SENSITIVITY_Y = 28.0;
+                document.getElementById('mode-text').innerText = '模式：眼控';
+                document.getElementById('mode-icon').innerText = 'visibility';
+                startCameraAndAI();
+            } else {
+                currentMode = 'touch';
+                document.getElementById('mode-text').innerText = '模式：觸控';
+                document.getElementById('mode-icon').innerText = 'ads_click';
+                stopCameraAndAI();
             }
         }
 
@@ -306,10 +343,14 @@
             resetGaze();
         }
 
-        function clearAll() {
+        function clearInterval() {
             document.getElementById('output').innerText = '';
             window.speechSynthesis.cancel();
             resetGaze();
+        }
+        
+        function clearAll() {
+            clearInterval();
         }
 
         function resetGaze() {
@@ -321,23 +362,36 @@
             gazeStartTime = 0;
         }
 
-        function initHeadTracking() {
-            const videoElement = document.getElementById('webcam-preview');
-            const cursorElement = document.getElementById('head-cursor');
-            const loadingElement = document.getElementById('loading-status');
-
-            const faceMesh = new FaceMesh({
+        // 初始化 MediaPipe Face Mesh
+        function initAIModel() {
+            faceMesh = new FaceMesh({
                 locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`
             });
 
             faceMesh.setOptions({
                 maxNumFaces: 1,
-                refineLandmarks: false,
-                minDetectionConfidence: 0.5,
-                minTrackingConfidence: 0.5
+                refineLandmarks: true, // 核心：必須精準抓取瞳孔的 5 個特徵點
+                minDetectionConfidence: 0.6,
+                minTrackingConfidence: 0.6
             });
 
+            const cursorElement = document.getElementById('head-cursor');
+            const loadingElement = document.getElementById('loading-status');
+
+            // --- 強化版濾波器核心變數 (卡爾曼簡化版濾波與自適應邊界) ---
+            let kalmanX = window.innerWidth / 2;
+            let kalmanY = window.innerHeight / 2;
+            let P_x = 1.0, P_y = 1.0; 
+            const Q = 0.015; // 過程噪聲（越小越平滑，用於鎖定目標不抖動）
+            const R = 0.45;  // 量測噪聲（防震顫）
+
+            // 自適應雙眼眼眶範圍邊界（自動校準使用者眼神範圍）
+            let minRatioX = 0.42, maxRatioX = 0.58;
+            let minRatioY = 0.40, maxRatioY = 0.60;
+
             faceMesh.onResults((results) => {
+                if (currentMode === 'touch') return;
+
                 if (loadingElement.style.display !== 'none') {
                     loadingElement.style.display = 'none';
                     cursorElement.style.display = 'block';
@@ -345,31 +399,141 @@
 
                 if (results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
                     const landmarks = results.multiFaceLandmarks[0];
-                    const nose = landmarks[4];
+                    
+                    let targetX = 0;
+                    let targetY = 0;
 
-                    const screenX = window.innerWidth / 2 + ((1 - nose.x) - 0.5) * window.innerWidth * SENSITIVITY_X;
-                    const screenY = window.innerHeight / 2 + (nose.y - 0.5) * window.innerHeight * SENSITIVITY_Y;
+                    if (currentMode === 'head') {
+                        // 【頭控模式】保持原本穩定的鼻尖追蹤
+                        const nose = landmarks[4];
+                        targetX = window.innerWidth / 2 + ((1 - nose.x) - 0.5) * window.innerWidth * SENSITIVITY_X;
+                        targetY = window.innerHeight / 2 + (nose.y - 0.5) * window.innerHeight * SENSITIVITY_Y;
+                        
+                        kalmanX = targetX;
+                        kalmanY = targetY;
+                    } 
+                    else if (currentMode === 'eye') {
+                        // 【高精準眼控模式】：雙眼特徵融合與自適應校準
+                        
+                        // 左眼邊界與瞳孔 (33:外眼角, 133:內眼角, 159:上眼瞼, 145:下眼瞼, 468:瞳孔中心)
+                        const lLeft = landmarks[33], lRight = landmarks[133];
+                        const lTop = landmarks[159], lBottom = landmarks[145];
+                        const lPupil = landmarks[468];
 
-                    cursorElement.style.left = `${Math.max(0, Math.min(window.innerWidth, screenX))}px`;
-                    cursorElement.style.top = `${Math.max(0, Math.min(window.innerHeight, screenY))}px`;
+                        // 右眼邊界與瞳孔 (362:內眼角, 263:外眼角, 386:上眼瞼, 374:下眼瞼, 473:瞳孔中心)
+                        const rLeft = landmarks[362], rRight = landmarks[263];
+                        const rTop = landmarks[386], rBottom = landmarks[374];
+                        const rPupil = landmarks[473];
 
-                    checkHover(screenX, screenY);
+                        if (lLeft && lRight && lTop && lBottom && lPupil && rLeft && rRight && rTop && rBottom && rPupil) {
+                            
+                            // 1. 計算左眼與右眼的水平/垂直相對比例
+                            const lWidth = Math.abs(lRight.x - lLeft.x);
+                            const lHeight = Math.abs(lBottom.y - lTop.y);
+                            const rWidth = Math.abs(rRight.x - rLeft.x);
+                            const rHeight = Math.abs(rBottom.y - rTop.y);
+
+                            if (lWidth > 0 && lHeight > 0 && rWidth > 0 && rHeight > 0) {
+                                const rxLeft = (lPupil.x - lLeft.x) / lWidth;
+                                const ryLeft = (lPupil.y - lTop.y) / lHeight;
+                                
+                                const rxRight = (rPupil.x - rLeft.x) / rWidth;
+                                const ryRight = (rPupil.y - rTop.y) / rHeight;
+
+                                // 2. 雙眼權重融合，降低環境光源不均帶來的單眼跳動
+                                const avgRatioX = (rxLeft + rxRight) / 2;
+                                const avgRatioY = (ryLeft + ryRight) / 2;
+
+                                // 3. 自適應邊界學習：自動記錄使用者眼球轉動的最大極限
+                                if (avgRatioX < minRatioX && avgRatioX > 0.3) minRatioX = avgRatioX;
+                                if (avgRatioX > maxRatioX && avgRatioX < 0.7) maxRatioX = avgRatioX;
+                                if (avgRatioY < minRatioY && avgRatioY > 0.3) minRatioY = avgRatioY;
+                                if (avgRatioY > maxRatioY && avgRatioY < 0.7) maxRatioY = avgRatioY;
+
+                                // 4. 將當前的眼神比例歸一化 (0.0 ~ 1.0)，讓眼球轉動邊緣按鈕更輕鬆
+                                const normX = (avgRatioX - minRatioX) / (maxRatioX - minRatioX || 1);
+                                const normY = (avgRatioY - minRatioY) / (maxRatioY - minRatioY || 1);
+
+                                // 5. 映射至螢幕座標（考慮鏡頭左右反轉）
+                                targetX = window.innerWidth * (1 - normX);
+                                targetY = window.innerHeight * normY;
+
+                                // 6. 卡爾曼濾波演算法：動態估算最佳位置，在動態跟隨與靜態鎖定之間取得完美平衡
+                                // X 軸濾波
+                                P_x = P_x + Q;
+                                const K_x = P_x / (P_x + R);
+                                kalmanX = kalmanX + K_x * (targetX - kalmanX);
+                                P_x = (1 - K_x) * P_x;
+
+                                // Y 軸濾波
+                                P_y = P_y + Q;
+                                const K_y = P_y / (P_y + R);
+                                kalmanY = kalmanY + K_y * (targetY - kalmanY);
+                                P_y = (1 - K_y) * P_y;
+                            }
+                        }
+                    }
+
+                    // 限制游標不超出螢幕邊界並更新位置
+                    const finalX = Math.max(0, Math.min(window.innerWidth, kalmanX));
+                    const finalY = Math.max(0, Math.min(window.innerHeight, kalmanY));
+
+                    cursorElement.style.left = `${finalX}px`;
+                    cursorElement.style.top = `${finalY}px`;
+
+                    checkHover(finalX, finalY);
                 } else {
                     resetGaze();
                 }
             });
+        }
 
-            const camera = new Camera(videoElement, {
-                onFrame: async () => {
-                    await faceMesh.send({ image: videoElement });
-                },
-                width: 640,
-                height: 480
-            });
+        // 啟動鏡頭與偵測
+        function startCameraAndAI() {
+            if (isCameraRunning) return;
 
-            camera.start().catch(err => {
-                showError();
-            });
+            const videoElement = document.getElementById('webcam-preview');
+            const loadingElement = document.getElementById('loading-status');
+            videoElement.style.display = 'block'; 
+            loadingElement.style.display = 'block';
+            loadingElement.innerText = `AI ${currentMode === 'head' ? '頭控' : '眼控'}模式載入中...`;
+
+            if (!faceMesh) {
+                initAIModel();
+            }
+
+            if (!camera) {
+                camera = new Camera(videoElement, {
+                    onFrame: async () => {
+                        if (currentMode !== 'touch') {
+                            await faceMesh.send({ image: videoElement });
+                        }
+                    },
+                    width: 640,
+                    height: 480
+                });
+            }
+
+            camera.start()
+                .then(() => { isCameraRunning = true; })
+                .catch(err => { showError(); });
+        }
+
+        // 停止鏡頭與偵測（回到觸控模式）
+        function stopCameraAndAI() {
+            const videoElement = document.getElementById('webcam-preview');
+            const cursorElement = document.getElementById('head-cursor');
+            const loadingElement = document.getElementById('loading-status');
+            
+            videoElement.style.display = 'none';
+            cursorElement.style.display = 'none';
+            loadingElement.style.display = 'none';
+
+            if (videoElement.srcObject) {
+                videoElement.srcObject.getTracks().forEach(track => track.stop());
+                videoElement.srcObject = null;
+            }
+            isCameraRunning = false;
         }
 
         function checkHover(x, y) {
@@ -409,7 +573,6 @@
             }
         }
 
-        // 修正：補回正確的 function 開頭
         function showError() {
             document.getElementById('loading-status').innerHTML = `
                 <div class="text-red-400 font-bold mb-2">鏡頭啟動失敗</div>
@@ -419,17 +582,13 @@
                     3. 開啟網頁後，請務必點擊瀏覽器的「允許」鏡頭權限。
                 </div>
             `;
+            document.getElementById('loading-status').style.display = 'block';
         }
 
         window.onload = () => {
             updateGrid('common');
             if (window.speechSynthesis.onvoiceschanged !== undefined) {
                 window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
-            }
-            try {
-                initHeadTracking();
-            } catch (e) {
-                showError();
             }
         };
     </script>
