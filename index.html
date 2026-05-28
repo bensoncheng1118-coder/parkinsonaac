@@ -190,10 +190,61 @@
             <p class="text-xs text-slate-400">提示：帕金森氏症患者若有震顫，建議將時間拉長（如 2.5秒以上）以防誤觸。</p>
         </div>
 
+        <div class="border-t pt-4 mt-2">
+            <button onclick="openVocabularyModal()" class="w-full py-3 bg-indigo-600 text-white font-bold rounded-xl shadow-md hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2">
+                <span class="material-symbols-outlined">menu_book</span>開放式詞彙庫
+            </button>
+        </div>
+
         <div class="mt-auto border-t pt-4">
             <button onclick="toggleSettingsMenu()" class="w-full py-3 bg-slate-800 text-white font-bold rounded-xl shadow-md hover:bg-slate-950 transition-colors">
                 完成並儲存
             </button>
+        </div>
+    </div>
+
+    <div id="vocab-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm hidden z-[10100] flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-5xl h-[85vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden">
+            <div class="bg-indigo-900 text-white p-6 flex justify-between items-center shrink-0">
+                <div>
+                    <h3 class="text-2xl font-black flex items-center gap-2">
+                        <span class="material-symbols-outlined text-3xl">menu_book</span> 台灣本土特殊教育/輔具中心官方公開詞彙庫
+                    </h3>
+                    <p class="text-indigo-200 text-sm mt-1">請為各類別分別挑選【剛好 9 個】核心詞彙放置於主介面上。</p>
+                </div>
+                <button onclick="closeVocabularyModal()" class="text-white/70 hover:text-white bg-white/10 hover:bg-white/20 p-2 rounded-full transition-colors">
+                    <span class="material-symbols-outlined" style="font-size: 2rem;">close</span>
+                </button>
+            </div>
+
+            <div class="bg-slate-100 p-3 flex gap-2 border-b shrink-0 overflow-x-auto no-scrollbar">
+                <button id="tab-v-common" onclick="switchVocabTab('common')" class="px-6 py-2.5 font-black text-lg rounded-xl transition-all bg-indigo-600 text-white shadow-md">常用</button>
+                <button id="tab-v-eat" onclick="switchVocabTab('eat')" class="px-6 py-2.5 font-black text-lg rounded-xl transition-all bg-white text-slate-700 hover:bg-slate-200">食</button>
+                <button id="tab-v-cloth" onclick="switchVocabTab('cloth')" class="px-6 py-2.5 font-black text-lg rounded-xl transition-all bg-white text-slate-700 hover:bg-slate-200">衣</button>
+                <button id="tab-v-live" onclick="switchVocabTab('live')" class="px-6 py-2.5 font-black text-lg rounded-xl transition-all bg-white text-slate-700 hover:bg-slate-200">住</button>
+                <button id="tab-v-move" onclick="switchVocabTab('move')" class="px-6 py-2.5 font-black text-lg rounded-xl transition-all bg-white text-slate-700 hover:bg-slate-200">行</button>
+            </div>
+
+            <div class="bg-amber-50 border-b border-amber-200 px-6 py-2 flex justify-between items-center shrink-0">
+                <span class="text-amber-800 font-bold flex items-center gap-1 text-sm">
+                    <span class="material-symbols-outlined text-base">info</span> 點擊方格以勾選或取消，每個分類必須正好選擇 9 個詞彙。
+                </span>
+                <span id="vocab-counter" class="bg-indigo-100 text-indigo-900 font-black px-4 py-1 rounded-full text-base border border-indigo-300">
+                    當前類別已選：0 / 9
+                </span>
+            </div>
+
+            <div id="vocab-selection-grid" class="flex-grow overflow-y-auto p-6 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 bg-slate-50">
+                </div>
+
+            <div class="p-4 bg-slate-100 border-t flex justify-end gap-3 shrink-0">
+                <button onclick="closeVocabularyModal()" class="px-6 py-3 bg-slate-400 text-white font-black rounded-xl hover:bg-slate-500 transition-colors text-lg">
+                    取消變更
+                </button>
+                <button onclick="saveVocabularySelection()" class="px-8 py-3 bg-green-600 text-white font-black rounded-xl hover:bg-green-700 shadow-md transition-colors text-lg flex items-center gap-2">
+                    <span class="material-symbols-outlined">save</span> 確認儲存並套用
+                </button>
+            </div>
         </div>
     </div>
 
@@ -263,13 +314,62 @@
     </div>
 
     <script>
-        const menuData = {
-            'common': [['你好', 'waving_hand'], ['謝謝', 'volunteer_activism'], ['請幫我', 'front_hand'], ['想休息', 'bedtime'], ['對不起', 'sentiment_dissatisfied'], ['是的', 'check_circle'], ['不是', 'cancel'], ['沒關係', 'thumb_up'], ['再見', 'exit_to_app']],
-            'eat': [['肚子餓', 'restaurant'], ['喝水', 'local_drink'], ['吃藥', 'medication'], ['水果', 'nutrition'], ['太燙了', 'heat_alt'], ['太冷了', 'ac_unit'], ['吃飽了', 'done_all'], ['慢慢吃', 'timer'], ['喝湯', 'soup_kitchen']],
-            'cloth': [['太冷了', 'severe_cold'], ['太熱了', 'device_thermostat'], ['換衣服', 'checkroom'], ['外套', 'dry_cleaning'], ['脫衣服', 'accessibility_new'], ['尿布濕', 'baby_changing_station'], ['洗澡', 'bathtub'], ['太緊了', 'compress'], ['穿襪子', 'socks']],
-            'live': [['想睡覺', 'sleep'], ['上廁所', 'wc'], ['看電視', 'tv'], ['開燈', 'lightbulb'], ['關燈', 'light_off'], ['翻身', 'airline_seat_flat_angled'], ['起來', 'upload'], ['回房間', 'meeting_room'], ['拿眼鏡', 'eyeglasses']],
-            'move': [['散步', 'directions_walk'], ['輪椅', 'accessible'], ['醫院', 'local_hospital'], ['回家', 'home'], ['慢一點', 'slow_motion_video'], ['停下來', 'back_hand'], ['出門', 'door_open'], ['扶我', 'assist_walker'], ['拿柺杖', 'blind']]
+        // 龐大本土特教/輔具中心公開圖冊基礎詞彙庫 (一整個龐大詞彙庫，供後續客製化選取九個)
+        const FULL_VOCABULARY_DATABASE = {
+            'common': [
+                ['你好', 'waving_hand'], ['謝謝', 'volunteer_activism'], ['請幫我', 'front_hand'], 
+                ['想休息', 'bedtime'], ['對不起', 'sentiment_dissatisfied'], ['是的', 'check_circle'], 
+                ['不是', 'cancel'], ['沒關係', 'thumb_up'], ['再見', 'exit_to_app'],
+                ['早安', 'light_mode'], ['不舒服', 'sick'], ['救命', 'campaign'],
+                ['高興', 'sentiment_satisfied'], ['生氣', 'mood_bad'], ['害怕', 'gavel'],
+                ['等一下', 'hourglass_empty'], ['不知道', 'help'], ['要看醫生', 'medical_services']
+            ],
+            'eat': [
+                ['肚子餓', 'restaurant'], ['喝水', 'local_drink'], ['吃藥', 'medication'], 
+                ['水果', 'nutrition'], ['太燙了', 'heat_alt'], ['太冷了', 'ac_unit'], 
+                ['吃飽了', 'done_all'], ['慢慢吃', 'timer'], ['喝湯', 'soup_kitchen'],
+                ['吃白飯', 'rice_bowl'], ['想吃麵', 'ramen_dining'], ['想喝茶', 'emoji_food_beverage'],
+                ['要拿湯匙', 'spoon'], ['拿筷子', 'restaurant'], ['想吃麵包', 'bakery_dining'],
+                ['太甜了', 'cookie'], ['太鹹了', 'soup_kitchen'], ['倒水', 'water_drop']
+            ],
+            'cloth': [
+                ['太冷了', 'severe_cold'], ['太熱了', 'device_thermostat'], ['換衣服', 'checkroom'], 
+                ['外套', 'dry_cleaning'], ['脫衣服', 'accessibility_new'], ['尿布濕', 'baby_changing_station'], 
+                ['洗澡', 'bathtub'], ['太緊了', 'compress'], ['穿襪子', 'socks'],
+                ['穿鞋子', 'ice_skating'], ['扣鈕扣', 'radio_button_checked'], ['拉拉鍊', 'unfold_more'],
+                ['戴帽子', 'execution_room'], ['長褲', 'airline_seat_legroom_extra'], ['短袖', 'accessibility'],
+                ['衣服髒了', 'imagesearch_roller'], ['圍兜兜', 'layers'], ['梳頭髮', 'content_cut']
+            ],
+            'live': [
+                ['想睡覺', 'sleep'], ['上廁所', 'wc'], ['看電視', 'tv'], 
+                ['開燈', 'lightbulb'], ['關燈', 'light_off'], ['翻身', 'airline_seat_flat_angled'], 
+                ['起來', 'upload'], ['回房間', 'meeting_room'], ['拿眼鏡', 'eyeglasses'],
+                ['開冷氣', 'mode_fan'], ['關冷氣', 'ac_unit'], ['吹風機', 'wind_power'],
+                ['蓋被子', 'single_bed'], ['吹電風扇', 'toys_fan'], ['拿手機', 'smartphone'],
+                ['抓癢', 'back_hand'], ['開窗戶', 'window'], ['衛生紙', 'layers']
+            ],
+            'move': [
+                ['散步', 'directions_walk'], ['輪椅', 'accessible'], ['醫院', 'local_hospital'], 
+                ['回家', 'home'], ['慢一點', 'slow_motion_video'], ['停下來', 'back_hand'], 
+                ['出門', 'door_open'], ['扶我', 'assist_walker'], ['拿柺杖', 'blind'],
+                ['坐車', 'directions_car'], ['搭電梯', 'elevator'], ['走平路', 'horizontal_rule'],
+                ['爬樓梯', 'stairs'], ['去公園', 'park'], ['復健', 'fitness_center'],
+                ['安全帶', 'gavel'], ['太快了', 'speed'], ['到站了', 'wrong_location']
+            ]
         };
+
+        // 當前使用者配置在介面上的九個詞彙 (預設為前九個)
+        const menuData = {
+            'common': [...FULL_VOCABULARY_DATABASE['common'].slice(0, 9)],
+            'eat': [...FULL_VOCABULARY_DATABASE['eat'].slice(0, 9)],
+            'cloth': [...FULL_VOCABULARY_DATABASE['cloth'].slice(0, 9)],
+            'live': [...FULL_VOCABULARY_DATABASE['live'].slice(0, 9)],
+            'move': [...FULL_VOCABULARY_DATABASE['move'].slice(0, 9)]
+        };
+
+        // 記錄詞彙庫彈窗暫存的選取狀態
+        let tempSelectedVocab = { 'common': [], 'eat': [], 'cloth': [], 'live': [], 'move': [] };
+        let currentVocabTab = 'common';
 
         let lastClick = 0;
         let currentHoveredElement = null;
@@ -327,6 +427,124 @@
             document.getElementById('val-sensX').innerText = sx.toFixed(1);
             document.getElementById('val-sensY').innerText = sy.toFixed(1);
             document.getElementById('val-dwell').innerText = dw.toFixed(1) + ' 秒';
+        }
+
+        // 新增需求相關功能：開啟詞彙庫彈窗
+        function openVocabularyModal() {
+            // 深拷貝當前已選的資料到暫存區
+            for (let cat in menuData) {
+                tempSelectedVocab[cat] = menuData[cat].map(item => item[0]); // 僅記錄文字作識別
+            }
+            document.getElementById('vocab-modal').classList.remove('hidden');
+            switchVocabTab('common');
+        }
+
+        // 新增需求相關功能：關閉詞彙庫彈窗
+        function closeVocabularyModal() {
+            document.getElementById('vocab-modal').classList.add('hidden');
+        }
+
+        // 新增需求相關功能：切換詞彙庫分類分頁
+        function switchVocabTab(category) {
+            currentVocabTab = category;
+            const tabs = ['common', 'eat', 'cloth', 'live', 'move'];
+            tabs.forEach(t => {
+                const btn = document.getElementById(`tab-v-${t}`);
+                if (t === category) {
+                    btn.className = "px-6 py-2.5 font-black text-lg rounded-xl transition-all bg-indigo-600 text-white shadow-md";
+                } else {
+                    btn.className = "px-6 py-2.5 font-black text-lg rounded-xl transition-all bg-white text-slate-700 hover:bg-slate-200";
+                }
+            });
+            renderVocabSelectionGrid();
+        }
+
+        // 新增需求相關功能：渲染龐大庫存詞彙以供挑選
+        function renderVocabSelectionGrid() {
+            const grid = document.getElementById('vocab-selection-grid');
+            grid.innerHTML = '';
+            
+            const totalAvailable = FULL_VOCABULARY_DATABASE[currentVocabTab];
+            const selectedList = tempSelectedVocab[currentVocabTab];
+            
+            // 更新上方計數器
+            document.getElementById('vocab-counter').innerText = `當前類別已選：${selectedList.length} / 9`;
+
+            totalAvailable.forEach(([text, iconName]) => {
+                const isSelected = selectedList.includes(text);
+                const card = document.createElement('div');
+                
+                // 根據是否點選給予不同樣式
+                card.className = `p-4 rounded-2xl border-3 flex flex-col items-center justify-center gap-3 cursor-pointer select-none transition-all ${
+                    isSelected 
+                    ? 'bg-indigo-50 border-indigo-600 text-indigo-900 ring-2 ring-indigo-600/20 shadow-md' 
+                    : 'bg-white border-slate-200 hover:border-slate-300 text-slate-700 shadow-sm'
+                }`;
+
+                card.innerHTML = `
+                    <div class="flex justify-between w-full items-center shrink-0">
+                        <span class="material-symbols-outlined text-sm ${isSelected ? 'text-indigo-600 font-bold' : 'text-slate-300'}">
+                            ${isSelected ? 'check_circle' : 'radio_button_unchecked'}
+                        </span>
+                    </div>
+                    <span class="material-symbols-outlined text-4xl ${isSelected ? 'text-indigo-600' : 'text-slate-400'}">${iconName}</span>
+                    <span class="font-black text-xl tracking-wide">${text}</span>
+                `;
+
+                // 點擊事件：切換選取狀態，並嚴格限制只能選擇 9 個
+                card.onclick = () => {
+                    const idx = selectedList.indexOf(text);
+                    if (idx > -1) {
+                        // 原本已選取 -> 取消選取
+                        selectedList.splice(idx, 1);
+                    } else {
+                        // 原本未選取 -> 檢查是否超過 9 個
+                        if (selectedList.length >= 9) {
+                            alert('每個介面類別限制「只能選擇九個」放置於畫面中！請先取消勾選不需要的詞彙。');
+                            return;
+                        }
+                        selectedList.push(text);
+                    }
+                    renderVocabSelectionGrid();
+                };
+
+                grid.appendChild(card);
+            });
+        }
+
+        // 新增需求相關功能：儲存並套用選取結果
+        function saveVocabularySelection() {
+            // 檢查是否每個分類都完整選滿 9 個
+            for (let cat in tempSelectedVocab) {
+                if (tempSelectedVocab[cat].length !== 9) {
+                    const catNameMap = { 'common': '常用', 'eat': '食', 'cloth': '衣', 'live': '住', 'move': '行' };
+                    alert(`【${catNameMap[cat]}】分類目前選了 ${tempSelectedVocab[cat].length} 個。請確認每個類別都恰好選滿 9 個詞彙才能存檔套用！`);
+                    switchVocabTab(cat);
+                    return;
+                }
+            }
+
+            // 將暫存寫回核心配置中
+            for (let cat in tempSelectedVocab) {
+                menuData[cat] = tempSelectedVocab[cat].map(text => {
+                    // 從完整資料庫撈取原有的 icon 結構
+                    return FULL_VOCABULARY_DATABASE[cat].find(item => item[0] === text);
+                });
+            }
+
+            // 即時重繪主網格介面
+            const activeNav = document.querySelector('.nav-btn.bg-gray-500, .nav-btn.bg-orange-500, .nav-btn.bg-blue-500, .nav-btn.bg-green-500, .nav-btn.bg-purple-500');
+            let currentActiveCat = 'common';
+            if (activeNav) {
+                if (activeNav.id === 'nav-eat') currentActiveCat = 'eat';
+                if (activeNav.id === 'nav-cloth') currentActiveCat = 'cloth';
+                if (activeNav.id === 'nav-live') currentActiveCat = 'live';
+                if (activeNav.id === 'nav-move') currentActiveCat = 'move';
+            }
+            updateGrid(currentActiveCat);
+            
+            closeVocabularyModal();
+            toggleSettingsMenu(); // 順便收合右拉選單
         }
 
         function toggleLanguage() {
