@@ -1965,6 +1965,13 @@ async function speakTaigiOnline(text) {
                 window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
             }
         };
+		if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./service-worker.js')
+            .then(() => console.log('Service Worker 已註冊'))
+            .catch(error => console.warn('Service Worker 註冊失敗：', error));
+    });
+}
     </script>
 </body>
 
