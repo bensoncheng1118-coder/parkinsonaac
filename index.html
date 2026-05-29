@@ -19,7 +19,58 @@
             overflow: hidden;
             cursor: pointer;
         }
+/* 所有可點擊按鈕都先保留邊框空間，避免框框出現時版面跳動 */
+button,
+select,
+.phrase-btn,
+.nav-btn,
+.ctrl-btn,
+#vocab-selection-grid > div {
+    box-sizing: border-box;
+}
 
+/* 滑鼠 hover、鍵盤聚焦、頭控/眼控停留時，都顯示外框 */
+button:hover,
+select:hover,
+.phrase-btn:hover,
+.nav-btn:hover,
+.ctrl-btn:hover,
+#vocab-selection-grid > div:hover,
+button:focus-visible,
+select:focus-visible,
+.phrase-btn:focus-visible,
+.nav-btn:focus-visible,
+.ctrl-btn:focus-visible,
+.gaze-hover {
+    outline: 5px solid #facc15;
+    outline-offset: 4px;
+}
+
+/* 九宮格詞彙按鈕：滑鼠與頭控/眼控停留都更明顯 */
+.phrase-btn:hover,
+.phrase-btn.gaze-hover {
+    border-color: #22c55e;
+    box-shadow: 0 6px 0 #16a34a, 0 0 0 6px rgba(250, 204, 21, 0.45);
+}
+
+/* 下方類別按鈕：滑鼠與頭控/眼控停留 */
+.nav-btn:hover,
+.nav-btn.gaze-hover {
+    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.18), 0 0 0 6px rgba(250, 204, 21, 0.55);
+}
+
+/* 播放、清除按鈕：滑鼠與頭控/眼控停留 */
+.ctrl-btn:hover,
+.ctrl-btn.gaze-hover {
+    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.18), 0 0 0 6px rgba(250, 204, 21, 0.55);
+}
+
+/* 類別按鈕按下後保留框框 */
+.nav-btn.active-nav {
+    outline: 5px solid #facc15;
+    outline-offset: 4px;
+    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.2), 0 0 0 7px rgba(250, 204, 21, 0.65);
+}
         /* 調整中間按鈕：移除正方形限制，使其呈現大又寬的長方形並充滿網格 */
         .phrase-btn {
             width: 100%;
@@ -158,12 +209,234 @@
             transition: opacity 0.3s ease-in-out;
             z-index: 10040;
         }
+.category-arasaac-icon {
+    width: 58px;
+    height: 58px;
+    object-fit: contain;
+    display: block;
+    margin-bottom: 6px;
+}
+
+.category-material-icon {
+    font-size: 3rem !important;
+    margin-bottom: 6px;
+}
+html,
+body {
+    width: 100%;
+    height: 100%;
+}
+
+/* 桌機維持原本大按鈕，不縮小 */
+body {
+    min-height: 100vh;
+    padding: 16px !important;
+    overflow: hidden;
+}
+
+#grid-container {
+    min-height: 0;
+}
+
+/* 只有平板與手機才開始自適應 */
+@media (max-width: 900px) {
+    body {
+        min-height: 100dvh;
+        padding: 10px !important;
+        overflow-y: auto;
+    }
+
+    body > .flex.gap-3.mb-2 {
+        gap: 8px;
+        margin-bottom: 8px;
+        flex-wrap: wrap;
+    }
+
+    #btn-settings-toggle {
+        width: 64px !important;
+        height: 52px !important;
+    }
+
+    #btn-lang-toggle {
+        width: 112px !important;
+        height: 52px !important;
+    }
+
+    #btn-mode {
+        width: 112px !important;
+        height: 52px !important;
+        font-size: 0.85rem;
+    }
+
+    #btn-play,
+    #btn-clear {
+        width: 72px !important;
+        height: 52px !important;
+    }
+
+    #display-box {
+        order: 10;
+        flex-basis: 100%;
+        min-height: 52px;
+        max-height: 52px;
+        font-size: 1.25rem;
+    }
+
+    #grid-container {
+        gap: 10px !important;
+        margin-bottom: 10px !important;
+        min-height: 52vh;
+    }
+
+    .phrase-btn {
+        border-radius: 20px;
+        gap: 8px;
+    }
+
+    .icon-main {
+        font-size: 2.8rem !important;
+    }
+
+    .arasaac-icon {
+        width: 62px;
+        height: 62px;
+    }
+
+    .text-main {
+        font-size: 1.25rem;
+        line-height: 1.15;
+        text-align: center;
+    }
+
+    .nav-btn {
+        height: 96px;
+        font-size: 1.5rem;
+        border-radius: 18px;
+    }
+
+    .category-material-icon {
+        font-size: 2.2rem !important;
+        margin-bottom: 4px;
+    }
+
+    .category-arasaac-icon {
+        width: 42px;
+        height: 42px;
+        margin-bottom: 4px;
+    }
+
+    body > .grid.grid-cols-5 {
+        gap: 8px;
+    }
+}
+
+/* 很小的手機再縮一層 */
+@media (max-width: 480px) {
+    body {
+        padding: 6px !important;
+    }
+
+    body > .flex.gap-3.mb-2 {
+        gap: 6px;
+    }
+
+    #grid-container {
+        gap: 6px !important;
+        min-height: 50vh;
+    }
+
+    .phrase-btn {
+        border-radius: 14px;
+        border-width: 2px;
+        gap: 4px;
+        box-shadow: 0 4px 0 #cbd5e1;
+    }
+
+    .icon-main {
+        font-size: 2rem !important;
+    }
+
+    .arasaac-icon {
+        width: 42px;
+        height: 42px;
+    }
+
+    .text-main {
+        font-size: 0.95rem;
+    }
+
+    .nav-btn {
+        height: 72px;
+        font-size: 1rem;
+        border-radius: 14px;
+    }
+
+    .category-material-icon {
+        font-size: 1.7rem !important;
+        margin-bottom: 2px;
+    }
+
+    .category-arasaac-icon {
+        width: 30px;
+        height: 30px;
+        margin-bottom: 2px;
+    }
+
+    button:hover,
+    select:hover,
+    .phrase-btn:hover,
+    .nav-btn:hover,
+    .ctrl-btn:hover,
+    .gaze-hover,
+    .nav-btn.active-nav {
+        outline-width: 3px;
+        outline-offset: 2px;
+    }
+}
+/* 手機很窄時：九宮格仍維持 3x3，但按鈕內容縮小 */
+@media (max-width: 480px) {
+    button:hover,
+    select:hover,
+    .phrase-btn:hover,
+    .nav-btn:hover,
+    .ctrl-btn:hover,
+    .gaze-hover,
+    .nav-btn.active-nav {
+        outline-width: 3px;
+        outline-offset: 2px;
+    }
+
+    #grid-container {
+        gap: 6px !important;
+    }
+
+    .phrase-btn {
+        border-width: 2px;
+        box-shadow: 0 4px 0 #cbd5e1;
+    }
+
+    .text-main {
+        font-size: clamp(0.85rem, 4vw, 1.1rem);
+    }
+
+    .nav-btn {
+        height: clamp(58px, 11vh, 82px);
+    }
+
+    .category-material-icon {
+        font-size: clamp(24px, 7vw, 34px) !important;
+    }
+
+    .category-arasaac-icon {
+        width: clamp(24px, 7vw, 34px);
+        height: clamp(24px, 7vw, 34px);
+    }
+}
     </style>
 </head>
 
-<body class="h-screen flex flex-col p-4 bg-slate-100 overflow-hidden text-slate-800">
-
-    <div id="loading-status">AI 模型載入中，請稍候...</div>
+<body class="min-h-screen flex flex-col bg-slate-100 text-slate-800">
+    <div id="loading-status">模型載入中，請稍候...</div>
     <div id="head-cursor"></div>
     <video id="webcam-preview" autoplay playsinline muted></video>
 
@@ -180,7 +453,7 @@
         
         <div class="flex flex-col gap-2">
             <label class="font-bold text-slate-700 flex justify-between">
-                <span>水平(X軸)靈敏度</span>
+                <span>鼠標左右靈敏度(頭控與眼控的鼠標)</span>
                 <span id="val-sensX" class="text-indigo-600">6.0</span>
             </label>
             <input type="range" id="input-sensX" min="1" max="50" step="0.5" value="6.0" oninput="updateSettingsFromUI()" class="w-full h-3 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600">
@@ -188,7 +461,7 @@
 
         <div class="flex flex-col gap-2">
             <label class="font-bold text-slate-700 flex justify-between">
-                <span>垂直(Y軸)靈敏度</span>
+                <span>鼠標上下靈敏度(頭控與眼控的鼠標)</span>
                 <span id="val-sensY" class="text-indigo-600">6.0</span>
             </label>
             <input type="range" id="input-sensY" min="1" max="50" step="0.5" value="6.0" oninput="updateSettingsFromUI()" class="w-full h-3 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600">
@@ -200,7 +473,7 @@
                 <span id="val-dwell" class="text-indigo-600">2.2 秒</span>
             </label>
             <input type="range" id="input-dwell" min="0.5" max="5.0" step="0.1" value="2.2" oninput="updateSettingsFromUI()" class="w-full h-3 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600">
-            <p class="text-xs text-slate-400">提示：帕金森氏症患者若有震顫，建議將時間拉長（如 2.5秒以上）以防誤觸。</p>
+            <p class="text-xs text-slate-400">提示：帕金森氏症患者若有較高頻率顫抖，建議將時間拉長（如 2.5秒以上）以防誤觸。</p>
         </div>
 
         <div class="border-t pt-4 mt-2">
@@ -221,7 +494,7 @@
             <div class="bg-indigo-900 text-white p-6 flex justify-between items-center shrink-0">
                 <div>
                     <h3 class="text-2xl font-black flex items-center gap-2">
-                        <span class="material-symbols-outlined text-3xl">menu_book</span> 詞彙庫
+                        <span class="material-symbols-outlined text-3xl">menu_book</span> 自訂詞彙介面
                     </h3>
                     <p class="text-indigo-200 text-sm mt-1">請為各類別分別挑選【剛好 9 個】核心詞彙放置於主介面上。</p>
                 </div>
@@ -238,13 +511,21 @@
                 <button id="tab-v-move" onclick="switchVocabTab('move')" class="px-6 py-2.5 font-black text-lg rounded-xl transition-all bg-white text-slate-700 hover:bg-slate-200">行</button>
             </div>
 
-            <div class="bg-amber-50 border-b border-amber-200 px-6 py-2 flex justify-between items-center shrink-0">
-                <span class="text-amber-800 font-bold flex items-center gap-1 text-sm">
-                    <span class="material-symbols-outlined text-base">info</span> 點擊方格以勾選或取消，每個分類必須正好選擇 9 個詞彙。
+                        <div class="bg-amber-50 border-b border-amber-200 px-6 py-2 flex justify-between items-center shrink-0">
+                <span class="text-amber-800 font-bold flex items-center gap-1 text-sm">                    <span class="material-symbols-outlined text-base">info</span> 點擊方格以勾選或取消，每個分類必須正好選擇 9 個詞彙。
                 </span>
                 <span id="vocab-counter" class="bg-indigo-100 text-indigo-900 font-black px-4 py-1 rounded-full text-base border border-indigo-300">
                     當前類別已選：0 / 9
                 </span>
+            </div>
+            <div class="bg-white border-b px-6 py-3 shrink-0">
+                <input
+                    id="vocab-search-input"
+                    type="search"
+                    placeholder="搜尋目前分類詞彙..."
+                    oninput="searchVocabulary(this.value)"
+                    class="w-full px-4 py-3 rounded-xl border-2 border-slate-200 text-lg font-bold outline-none focus:border-indigo-500"
+                >
             </div>
 
             <div id="vocab-selection-grid" class="flex-grow overflow-y-auto p-6 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 bg-slate-50">
@@ -309,23 +590,46 @@
         </div>
 
     <div class="grid grid-cols-5 gap-3 pb-2">
-        <button id="nav-common" onclick="updateGrid('common')" class="nav-btn bg-gray-500">
-            <div class="gaze-progress"></div><span class="btn-content">常用</span>
-        </button>
-        <button id="nav-eat" onclick="updateGrid('eat')" class="nav-btn bg-orange-500">
-            <div class="gaze-progress"></div><span class="btn-content">食</span>
-        </button>
-        <button id="nav-cloth" onclick="updateGrid('cloth')" class="nav-btn bg-blue-500">
-            <div class="gaze-progress"></div><span class="btn-content">衣</span>
-        </button>
-        <button id="nav-live" onclick="updateGrid('live')" class="nav-btn bg-green-500">
-            <div class="gaze-progress"></div><span class="btn-content">住</span>
-        </button>
-        <button id="nav-move" onclick="updateGrid('move')" class="nav-btn bg-purple-500">
-            <div class="gaze-progress"></div><span class="btn-content">行</span>
-        </button>
-    </div>
+    <button id="nav-common" onclick="updateGrid('common')" class="nav-btn bg-gray-500">
+        <div class="gaze-progress"></div>
+        <span class="btn-content">
+            <span class="material-symbols-outlined category-material-icon">forum</span>
+            <span>常用</span>
+        </span>
+    </button>
 
+    <button id="nav-eat" onclick="updateGrid('eat')" class="nav-btn bg-orange-500">
+        <div class="gaze-progress"></div>
+        <span class="btn-content">
+            <span class="material-symbols-outlined category-material-icon">restaurant</span>
+            <span>食</span>
+        </span>
+    </button>
+
+    <button id="nav-cloth" onclick="updateGrid('cloth')" class="nav-btn bg-blue-500">
+        <div class="gaze-progress"></div>
+        <span class="btn-content">
+            <span class="material-symbols-outlined category-material-icon">checkroom</span>
+            <span>衣</span>
+        </span>
+    </button>
+
+    <button id="nav-live" onclick="updateGrid('live')" class="nav-btn bg-green-500">
+        <div class="gaze-progress"></div>
+        <span class="btn-content">
+            <span class="material-symbols-outlined category-material-icon">home</span>
+            <span>住</span>
+        </span>
+    </button>
+
+    <button id="nav-move" onclick="updateGrid('move')" class="nav-btn bg-purple-500">
+        <div class="gaze-progress"></div>
+        <span class="btn-content">
+            <span class="material-symbols-outlined category-material-icon">directions_walk</span>
+            <span>行</span>
+        </span>
+    </button>
+</div>
     <script>
         // 龐大本土特教/輔具中心公開圖冊基礎詞彙庫 (一整個龐大詞彙庫，供後續客製化選取九個)
         const FULL_VOCABULARY_DATABASE = {
@@ -568,7 +872,7 @@
         // 記錄詞彙庫彈窗暫存的選取狀態
         let tempSelectedVocab = { 'common': [], 'eat': [], 'cloth': [], 'live': [], 'move': [] };
         let currentVocabTab = 'common';
-
+	let vocabSearchKeyword = '';
         let lastClick = 0;
         let currentHoveredElement = null;
         let gazeStartTime = 0;
@@ -578,6 +882,499 @@
         let SENSITIVITY_X = 6.0;
         let SENSITIVITY_Y = 6.0;
 
+const TAIGI_TTS_ENDPOINT = ''; 
+// 填入你的台語 TTS API，例如：
+// https://你的服務網址/tts?text=
+
+const taigiAudioCache = new Map();
+
+const TAIGI_OVERRIDES = {
+    '你好': 'lí hó',
+    '謝謝': 'to-siā',
+    '請幫我': 'tshiánn pang guá',
+    '對不起': 'pháinn-sè',
+    '是的': 'sī',
+    '不是': 'm̄-sī',
+    '再見': 'tsài-kiàn',
+    '早安': 'tsá-khí hó',
+    '不舒服': 'bô sóng-khuài',
+    '救命': 'kiù-miā',
+    '高興': 'huann-hí',
+    '生氣': 'siunn-khì',
+    '等一下': 'tán tsi̍t ē',
+    '不知道': 'm̄-tsai',
+    '要看醫生': 'beh khuànn i-sing',
+    '午安': 'tiong-tàu hó',
+    '晚安': 'àm-an',
+    '沒關係': 'bô iàu-kín',
+    '很好': 'tsiok hó',
+    '不好': 'bô hó',
+    '喜歡': 'kah-ì',
+    '討厭': 'thó-ià',
+    '害怕': 'kiann',
+    '緊張': 'kín-tiunn',
+    '難過': 'kan-khóo',
+    '無聊': 'bô-liâu',
+    '累了': 'siān--ah',
+    '沒事': 'bô tāi-tsì',
+    '小心': 'sió-sim',
+    '恭喜': 'kiong-hí',
+    '拜託': 'pài-thok',
+    '加油': 'ka-iû',
+    '可以': 'ē-sái',
+    '不可以': 'bē-sái',
+    '要': 'beh',
+    '不要': 'mài',
+    '對': 'tio̍h',
+    '不對': 'm̄-tio̍h',
+    '真的嗎': 'tsin--ê--bô',
+    '誰': 'siáng',
+    '什麼': 'siánn-mih',
+    '哪裡': 'tó-uī',
+    '什麼時候': 'tang-sî',
+    '為什麼': 'uī-siánn-mih',
+    '多少': 'guā-tsē',
+    '你': 'lí',
+    '我': 'guá',
+    '他': 'i',
+    '我們': 'lán',
+    '你們': 'lín',
+    '他們': 'in',
+    '大家': 'ta̍k-ke',
+    '朋友': 'pîng-iú',
+    '家人': 'ka-lâng',
+    '醫生': 'i-sing',
+    '護理師': 'hōo-lí-su',
+    '治療師': 'tī-liâu-su',
+    '志工': 'tsì-kang',
+    '社工': 'siā-kang',
+    '看護': 'khuànn-hōo',
+    '先生': 'sian-sinn',
+    '小姐': 'sió-tsiá',
+    '聽懂了': 'thiann ū-hiáu--ah',
+    '聽不懂': 'thiann bô-hiáu',
+    '忘記了': 'bē-kì--ah',
+    '記起來了': 'kì khí-lâi--ah',
+    '我想想': 'guá siūnn-khuànn-māi',
+    '快一點': 'khah kín tsi̍t ē',
+    '慢一點': 'khah bān tsi̍t ē',
+    '重來': 'tiông-lâi',
+    '確定': 'khak-tīng',
+    '取消': 'tshú-siau',
+    '安靜': 'an-tsīng',
+    '大聲點': 'khah tuā-siann',
+    '小聲點': 'khah sió-siann',
+    '好熱鬧': 'tsiok jia̍t-lāu',
+    '太吵了': 'siunn tshá--ah',
+    '舒服': 'sóng-khuài',
+    '痛': 'thiànn',
+    '癢': 'tsiūnn',
+    '暈': 'hīn',
+    '麻': 'mâ',
+    '冷': 'kuánn',
+    '熱': 'joa̍h',
+    '沒力氣': 'bô la̍t',
+    '喘不過氣': 'tshuánn bē kuè-khì',
+    '沒問題': 'bô būn-tê',
+    '可能吧': 'khó-lîng--lah',
+    '希望': 'hi-bōng',
+    '好運': 'hó-ūn',
+    '秘密': 'pì-bi̍t',
+    '開玩笑': 'khui uân-siò',
+    '真的': 'tsin--ê',
+    '假的': 'ké--ê',
+    '重要': 'tiōng-iàu',
+    '隨便': 'suî-piān',
+    '差不多': 'tsha-put-to',
+    '完全沒有': 'uân-tsuân bô',
+    '有一點': 'ū tsi̍t-tiám',
+    '非常多': 'hui-siông tsē',
+    '隨時可以': 'suî-sî ē-sái',
+    '結束了': 'kiat-sok--ah',
+
+    '肚子餓': 'pak-tóo iau',
+    '喝水': 'lim tsuí',
+    '吃藥': 'tsia̍h io̍h',
+    '水果': 'tsuí-kó',
+    '吃飽了': 'tsia̍h pá--ah',
+    '慢慢吃': 'bān-bān-á tsia̍h',
+    '喝湯': 'lim thng',
+    '吃白飯': 'tsia̍h pn̄g',
+    '想吃麵': 'siūnn beh tsia̍h mī',
+    '想吃麵包': 'siūnn beh tsia̍h pháng',
+    '喝牛奶': 'lim gû-ling',
+    '喝豆漿': 'lim tāu-tsiunn',
+    '喝茶': 'lim tê',
+    '喝咖啡': 'lim ka-pi',
+    '喝果汁': 'lim kué-tsiap',
+    '想吃肉': 'siūnn beh tsia̍h bah',
+    '想吃魚': 'siūnn beh tsia̍h hî',
+    '想吃菜': 'siūnn beh tsia̍h tshài',
+    '想吃蛋': 'siūnn beh tsia̍h nn̄g',
+    '想吃豆腐': 'siūnn beh tsia̍h tāu-hū',
+    '吃點心': 'tsia̍h tiám-sim',
+    '吃餅乾': 'tsia̍h piánn-kuann',
+    '吃蛋糕': 'tsia̍h nńg-ko',
+    '吃水果': 'tsia̍h tsuí-kó',
+    '蘋果': 'phōng-kó',
+    '香蕉': 'king-tsio',
+    '葡萄': 'phû-tô',
+    '西瓜': 'si-koe',
+    '橘子': 'kiat-á',
+    '木瓜': 'bo̍k-koe',
+    '要甜的': 'beh tinn--ê',
+    '要鹹的': 'beh kiâm--ê',
+    '要酸的': 'beh sng--ê',
+    '苦苦的': 'khóo-khóo--ê',
+    '太辣了': 'siunn hia̍h--ah',
+    '太燙了': 'siunn thǹg--ah',
+    '冰淇淋': 'ping-kî-lîm',
+    '軟一點': 'khah nńg tsi̍t ē',
+    '硬一點': 'khah ngē tsi̍t ē',
+    '切小塊': 'tshiat sió tè',
+    '打成泥': 'phah-tsò nî',
+    '用湯匙': 'ēng thng-sî',
+    '用筷子': 'ēng tī',
+    '用吸管': 'ēng khip-kuán',
+    '拿碗': 'the̍h uánn',
+    '拿盤子': 'the̍h puânn-á',
+    '拿杯子': 'the̍h pue-á',
+    '拿衛生紙': 'the̍h uē-sing-tsuá',
+    '擦嘴巴': 'tshat tshuì',
+    '流口水': 'lâu tshuì-nuā',
+    '吞不下': 'thun bē lo̍h',
+    '嗆到了': 'tshiunn--tio̍h',
+    '口渴': 'tshuì-ta',
+    '再一碗': 'koh tsi̍t uánn',
+    '不要了': 'mài--ah',
+    '很好吃': 'tsiok hó-tsia̍h',
+    '沒味道': 'bô bī',
+    '壞掉了': 'phái--khì--ah',
+    '早餐': 'tsá-tǹg',
+    '午餐': 'tiong-tǹg',
+    '晚餐': 'àm-tǹg',
+    '宵夜': 'siau-iā',
+    '想喝酒': 'siūnn beh lim tsiú',
+    '想喝汽水': 'siūnn beh lim khì-tsuí',
+    '想吃粥': 'siūnn beh tsia̍h muê',
+    '水餃': 'tsuí-kiáu',
+    '火鍋': 'hué-ko',
+    '烤肉': 'khò bah',
+    '漢堡': 'hàn-pó',
+    '薯條': 'tsî-tsiâu',
+    '披薩': 'phì-sà',
+    '壽司': 'siū-suh',
+    '沙拉': 'sa-lah',
+    '巧克力': 'tshiáu-khuh-lí',
+    '糖果': 'thn̂g-kó',
+    '紅豆湯': 'âng-tāu-thng',
+    '加糖': 'ke thn̂g',
+    '加鹽': 'ke iâm',
+    '少油': 'tsió iû',
+    '去冰': 'khì ping',
+    '微糖': 'bî-thn̂g',
+    '多喝水': 'khah tsē lim tsuí',
+    '維他命': 'uî-tha-bín',
+    '鈣片': 'khài-phìnn',
+    '胃痛': 'uī thiànn',
+    '想吐': 'siūnn beh thòo',
+    '脹氣': 'tiùnn-khì',
+    '消化不良': 'siau-huà put-liông',
+    '空腹吃': 'khang pak-tóo tsia̍h',
+    '飯後吃': 'pn̄g āu tsia̍h',
+    '配溫水': 'phuè un-tsuí',
+
+    '太冷了': 'siunn kuánn--ah',
+    '太熱了': 'siunn joa̍h--ah',
+    '換衣服': 'uānn sann',
+    '外套': 'guā-thò',
+    '脫衣服': 'thǹg sann',
+    '尿布濕': 'jiō-pòo ta̍m--ah',
+    '洗澡': 'sé sing-khu',
+    '穿襪子': 'tshīng be̍h',
+    '穿鞋子': 'tshīng ê',
+    '戴帽子': 'tì bō-á',
+    '長褲': 'tn̂g-khòo',
+    '短褲': 'té-khòo',
+    '襯衫': 'sann',
+    'T恤': 'thih-sut',
+    '毛衣': 'mn̂g-sann',
+    '內衣': 'lāi-sann',
+    '內褲': 'lāi-khòo',
+    '睡衣': 'khùn-sann',
+    '洋裝': 'iûnn-tsong',
+    '裙子': 'kûn-á',
+    '背心': 'puē-sim',
+    '雨衣': 'hōo-i',
+    '手套': 'tshiú-thò',
+    '圍巾': 'uî-kin',
+    '口罩': 'kháu-tsàu',
+    '皮帶': 'phuê-tuà',
+    '領帶': 'niá-tuà',
+    '拖鞋': 'thua-ê',
+    '運動鞋': 'ūn-tōng-ê',
+    '皮鞋': 'phuê-ê',
+    '涼鞋': 'liâng-ê',
+    '靴子': 'hia-á',
+    '布鞋': 'pòo-ê',
+    '髒了': 'lah-sap--ah',
+    '濕了': 'ta̍m--ah',
+    '破了': 'phuà--ah',
+    '太緊了': 'siunn kín--ah',
+    '太鬆了': 'siunn sang--ah',
+    '很好看': 'tsiok hó-khuànn',
+    '太厚了': 'siunn kāu--ah',
+    '太薄了': 'siunn po̍h--ah',
+    '要洗衣服': 'beh sé sann',
+    '晾衣服': 'liàng sann',
+    '收衣服': 'siu sann',
+    '摺衣服': 'tsih sann',
+    '衣櫃': 'sann-kuī',
+    '穿衣服': 'tshīng sann',
+    '扣鈕扣': 'khàu liú-khàu',
+    '解鈕扣': 'kái liú-khàu',
+    '拉拉鍊': 'thua lián-á',
+    '解拉鍊': 'kái lián-á',
+    '魔鬼氈': 'môo-kuí-tsiam',
+    '繫鞋帶': 'hē ê-tuà',
+    '梳頭髮': 'se thâu-mn̂g',
+    '剪頭髮': 'tsián thâu-mn̂g',
+    '洗頭髮': 'sé thâu-mn̂g',
+    '刮鬍子': 'kuah hôo-tshiu',
+    '刷牙': 'tshing-khí tshuì-khí',
+    '洗臉': 'sé bīn',
+    '剪指甲': 'tsián tsí-kah',
+    '擦乳液': 'tshat lú-i̍k',
+    '防曬乳': 'hông-sài-lú',
+    '戴眼鏡': 'tì gánn-kiànn',
+    '拿手帕': 'the̍h tshiú-phè',
+    '戴手錶': 'tì tshiú-pió',
+    '圍兜兜': 'uî to-to',
+    '護膝': 'hōo-kha-thâu-u',
+    '護腕': 'hōo-tshiú-uán',
+    '束腹帶': 'sok-pak-tuà',
+    '彈性襪': 'tuân-sìng be̍h',
+    '紅色衣服': 'âng-sik sann',
+    '藍色衣服': 'nâ-sik sann',
+    '黃色衣服': 'n̂g-sik sann',
+    '綠色衣服': 'li̍k-sik sann',
+    '黑色衣服': 'oo-sik sann',
+    '白色衣服': 'pe̍h-sik sann',
+    '新衣服': 'sin sann',
+    '舊衣服': 'kū sann',
+    '純棉的': 'sûn mî--ê',
+    '保暖內衣': 'pó-luán lāi-sann',
+    '遮陽帽': 'jia-iûnn bō-á',
+    '毛帽': 'mn̂g-bō',
+    '泳衣': 'íng-i',
+    '圍過來': 'uî--kuè-lâi',
+    '幫我拿鞋': 'pang guá the̍h ê',
+    '鞋子髒了': 'ê lah-sap--ah',
+    '襪子破了': 'be̍h phuà--ah',
+    '換鞋墊': 'uānn ê-tiām',
+    '衣服冰冰的': 'sann ping-ping--ê',
+    '想要這件': 'siūnn beh tsit kiānn',
+    '不要這件': 'mài tsit kiānn',
+    '試穿': 'tshì-tshīng',
+
+    '想睡覺': 'siūnn beh khùn',
+    '上廁所': 'khì piān-sóo',
+    '看電視': 'khuànn tiān-sī',
+    '起來': 'khí-lâi',
+    '開冷氣': 'khui líng-khì',
+    '蓋被子': 'khàm phuē',
+    '躺下': 'tó lo̍h-khì',
+    '翻身': 'huan-sin',
+    '坐起來': 'tsē khí-lâi',
+    '吹風機': 'tshue-hong-ki',
+    '開燈': 'khui ting',
+    '關燈': 'kuainn ting',
+    '開窗戶': 'khui thang',
+    '關窗戶': 'kuainn thang',
+    '開門': 'khui mn̂g',
+    '關門': 'kuainn mn̂g',
+    '吹電風扇': 'tshue tiān-hong-sìnn',
+    '吹暖氣': 'tshue luán-khì',
+    '拿枕頭': 'the̍h tsím-thâu',
+    '床太硬': 'tshn̂g siunn ngē',
+    '床太軟': 'tshn̂g siunn nńg',
+    '收音機': 'siu-im-ki',
+    '聽音樂': 'thiann im-ga̍k',
+    '看書': 'khuànn tsu',
+    '看報紙': 'khuànn pò-tsuá',
+    '用手機': 'ēng tshiú-ki',
+    '打電話': 'phah tiān-uē',
+    '視訊': 'sī-sìn',
+    '充電器': 'tshiong-tiān-khì',
+    'Wifi': 'uai-fai',
+    '睡不著': 'khùn bē-tio̍h',
+    '做惡夢': 'tsò pháiⁿ-bāng',
+    '有蚊子': 'ū báng-á',
+    '幫我拍背': 'pang guá phah puē',
+    '幫我按摩': 'pang guá an-môo',
+    '拉窗簾': 'thua thang-liâm',
+    '家裡': 'tshù-lāi',
+    '客廳': 'kheh-thiann',
+    '臥室': 'pâng',
+    '浴室': 'ek-sik',
+    '廚房': 'tû-pâng',
+    '陽台': 'iông-tâi',
+    '掃地': 'sàu-tē',
+    '拖地': 'thua-tē',
+    '倒垃圾': 'tò lah-sap',
+    '洗碗': 'sé uánn',
+    '澆花': 'kà hue',
+    '抱抱': 'phō-phō',
+    '聊天': 'liâu-thian',
+    '安靜點': 'khah tiām--leh',
+    '找鑰匙': 'tshuē só-sî',
+    '鎖門': 'só mn̂g',
+    '開鎖': 'khui só',
+    '沙發': 'so-huat',
+    '桌子': 'toh-á',
+    '椅子': 'í-á',
+    '櫃子': 'kuī-á',
+    '冰箱': 'ping-siunn',
+    '微波爐': 'bî-pho-lôo',
+    '洗衣機': 'sé-sann-ki',
+    '熱水瓶': 'jia̍t-tsuí-pân',
+    '垃圾桶': 'lah-sap-tháng',
+    '鏡子': 'kiànn-á',
+    '時鐘': 'sî-tsing',
+    '日曆': 'ji̍t-li̍k',
+    '全家福': 'tsuân-ke-hok',
+    '有客人': 'ū kheh-lâng',
+    '按門鈴': 'àn mn̂g-lîng',
+    '收包裹': 'siu pau-kó',
+    '澆水': 'kà tsuí',
+    '寵物': 'thiáng-bu̍t',
+    '餵狗': 'tshī káu',
+    '餵貓': 'tshī niau',
+    '剪報': 'tsián pò-tsuá',
+    '相簿': 'siòng-phōo',
+    '寫日記': 'siá ji̍t-kì',
+    '畫畫': 'uē-uē',
+    '下棋': 'ē kî',
+    '泡腳': 'phàu kha',
+    '量血壓': 'niû hueh-ap',
+    '量體溫': 'niû thé-un',
+    '量血糖': 'niû hueh-thn̂g',
+    '吃保健品': 'tsia̍h pó-kiān-phín',
+    '擦地板': 'tshat tē-pán',
+    '洗衣服': 'sé sann',
+    '除濕機': 'tû-sip-ki',
+    '空氣清淨機': 'khong-khì tshing-tsīng-ki',
+    '吸塵器': 'khip-tîn-khì',
+    '換床單': 'uānn tshn̂g-tuann',
+    '曬被子': 'phak phuē',
+    '整理房間': 'tsíng-lí pâng',
+    '有小強': 'ū ka-tsua̍h',
+    '漏水了': 'lāu-tsuí--ah',
+    '停電了': 'thîng-tiān--ah',
+    '好溫馨': 'tsiok un-hing',
+    '我想回家': 'guá siūnn beh tńg tshù',
+
+    '散步': 'sàn-pōo',
+    '輪椅': 'liân-í',
+    '出門': 'tshut-mn̂g',
+    '爬樓梯': 'peh lâu-thui',
+    '去公園': 'khì kong-hn̂g',
+    '坐電梯': 'tsē tiān-thui',
+    '搭汽車': 'tah tshì-tshia',
+    '搭公車': 'tah kong-tshia',
+    '搭捷運': 'tah tsia̍t-ūn',
+    '搭高鐵': 'tah ko-thih',
+    '搭火車': 'tah hué-tshia',
+    '搭計程車': 'tah ke-tîng-tshia',
+    '騎機車': 'khiâ oo-tóo-bái',
+    '騎自行車': 'khiâ tsū-hîng-tshia',
+    '走路': 'kiânn-lōo',
+    '扶我一下': 'hû guá tsi̍t ē',
+    '拐杖': 'kuái-tiōng',
+    '助行器': 'tsōo-hîng-khì',
+    '推車': 'thui-tshia',
+    '慢慢走': 'bān-bān-á kiânn',
+    '停下來': 'thîng--lo̍h-lâi',
+    '向左轉': 'ńg tò-pîng',
+    '向右轉': 'ńg tsiànn-pîng',
+    '向前走': 'hiòng tsîng kiânn',
+    '向後退': 'hiòng āu thè',
+    '小心跌倒': 'sió-sim pua̍h-tó',
+    '去醫院': 'khì i-īnn',
+    '去診所': 'khì tsín-sóo',
+    '去藥局': 'khì io̍h-kio̍k',
+    '去超市': 'khì tshiau-tshī',
+    '去菜市場': 'khì tshài-tshī-tiûnn',
+    '去便利商店': 'khì piān-lī siong-tiàm',
+    '去餐廳': 'khì tshan-thiann',
+    '去銀行': 'khì gîn-hâng',
+    '去郵局': 'khì iû-kio̍k',
+    '去學校': 'khì ha̍k-hāu',
+    '去圖書館': 'khì tôo-su-kuán',
+    '去百貨公司': 'khì pik-huè kong-si',
+    '去理髮店': 'khì lí-huat-tiàm',
+    '去拜拜': 'khì pài-pài',
+    '去教會': 'khì kàu-huē',
+    '去旅行': 'khì lí-hîng',
+    '看風景': 'khuànn hong-kíng',
+    '曬太陽': 'phak thài-iông',
+    '吹吹風': 'tshue-tshue hong',
+    '看花海': 'khuànn hue-hái',
+    '看動物': 'khuànn tōng-bu̍t',
+    '逛街': 'kńg-ke',
+    '買東西': 'bé mi̍h-kiānn',
+    '找朋友': 'tshuē pîng-iú',
+    '回家': 'tńg tshù',
+    '馬路': 'má-lōo',
+    '斑馬線': 'pan-má-suànn',
+    '紅綠燈': 'âng-li̍k-ting',
+    '天橋': 'thian-kiô',
+    '地下道': 'tē-hā-tō',
+    '人行道': 'jîn-hîng-tō',
+    '安全帶': 'an-tsuân-tuà',
+    '開車窗': 'khui tshia-thang',
+    '塞車了': 'that-tshia--ah',
+    '迷路了': 'bê-lōo--ah',
+    '等車': 'tán tshia',
+    '過馬路': 'kuè má-lōo',
+    '坐好': 'tsē hó',
+    '煞車': 'sat-tshia',
+    '安全第一': 'an-tsuân tē-it',
+    '去海邊': 'khì hái-pinn',
+    '去爬山': 'khì peh-suann',
+    '去博物館': 'khì phok-bu̍t-kuán',
+    '去電影院': 'khì tiān-iánn-īnn',
+    '去夜市': 'khì iā-tshī',
+    '出國': 'tshut-kok',
+    '搭飛機': 'tah pue-ki',
+    '行李箱': 'hîng-lí-siunn',
+    '護照': 'hōo-tsiàu',
+    '地圖': 'tē-tôo',
+    '開導航': 'khui tō-hâng',
+    '找車位': 'tshuē tshia-uī',
+    '加油站': 'ka-iû-tsām',
+    '收費站': 'siu-huì-tsām',
+    '車子壞了': 'tshia phái--khì--ah',
+    '輪胎沒氣': 'lián-thai bô khì',
+    '小心開車': 'sió-sim khui-tshia',
+    '太快了': 'siunn kín--ah',
+    '太慢了': 'siunn bān--ah',
+    '好漂亮': 'tsiok suí',
+    '累了想休息': 'siān--ah siūnn beh hioh-khùn',
+    '風景很好': 'hong-kíng tsiok hó',
+    '人好多': 'lâng tsin tsē',
+    '沒車子': 'bô tshia',
+    '天氣好': 'thinn-khì hó',
+    '下雨了': 'loh-hōo--ah',
+    '起霧了': 'khí bū--ah',
+    '風好大': 'hong tsiok tuā',
+    '出發吧': 'tshut-huat--lah'
+};
+const taigiTextMap = Object.fromEntries(
+    Object.values(FULL_VOCABULARY_DATABASE)
+        .flat()
+        .map(item => [item[0], TAIGI_OVERRIDES[item[0]] || item[0]])
+);
         let currentLanguage = 'zh-TW';
         
         // 控制模式：'touch' (觸控), 'head' (頭控), 'eye' (眼控)
@@ -643,7 +1440,7 @@
         }
 
         // 新增需求相關功能：切換詞彙庫分類分頁
-        function switchVocabTab(category) {
+                function switchVocabTab(category) {
             currentVocabTab = category;
             const tabs = ['common', 'eat', 'cloth', 'live', 'move'];
             tabs.forEach(t => {
@@ -654,15 +1451,33 @@
                     btn.className = "px-6 py-2.5 font-black text-lg rounded-xl transition-all bg-white text-slate-700 hover:bg-slate-200";
                 }
             });
+
+            vocabSearchKeyword = '';
+            const searchInput = document.getElementById('vocab-search-input');
+            if (searchInput) searchInput.value = '';
+
             renderVocabSelectionGrid();
         }
 
+        function searchVocabulary(value) {
+            vocabSearchKeyword = String(value || '').trim().toLowerCase();
+            renderVocabSelectionGrid();
+        }
         // 新增需求相關功能：渲染龐大庫存詞彙以供挑選
         function renderVocabSelectionGrid() {
             const grid = document.getElementById('vocab-selection-grid');
             grid.innerHTML = '';
             
-            const totalAvailable = FULL_VOCABULARY_DATABASE[currentVocabTab];
+                        const keyword = vocabSearchKeyword;
+            const totalAvailable = FULL_VOCABULARY_DATABASE[currentVocabTab].filter(item => {
+                if (!keyword) return true;
+
+                const text = String(item[0] || '').toLowerCase();
+                const iconName = String(item[1] || '').toLowerCase();
+                const englishKeyword = String(item[2] || '').toLowerCase();
+
+                return text.includes(keyword) || iconName.includes(keyword) || englishKeyword.includes(keyword);
+            });
             const selectedList = tempSelectedVocab[currentVocabTab];
             
             // 更新上方計數器
@@ -783,6 +1598,14 @@
         }
 
                 function updateGrid(category) {
+document.querySelectorAll('.nav-btn').forEach(btn => {
+    btn.classList.remove('active-nav');
+});
+
+const activeNavBtn = document.getElementById(`nav-${category}`);
+if (activeNavBtn) {
+    activeNavBtn.classList.add('active-nav');
+}
             const container = document.getElementById('grid-container');
             container.innerHTML = '';
             menuData[category].forEach((item, index) => {
@@ -815,38 +1638,78 @@
         }
 
         "use strict";
-        function speakText(text) {
-            window.speechSynthesis.cancel();
-            const msg = new SpeechSynthesisUtterance(text);
+        function getTaigiText(text) {
+    return taigiTextMap[text] || text;
+}
 
-            if (currentLanguage === 'nan-TW') {
-                const voices = window.speechSynthesis.getVoices();
-                const taiwaneseVoice = voices.find(v =>
-                    v.lang.includes('nan') ||
-                    v.lang.includes('min') ||
-                    v.name.includes('Taiwanese') ||
-                    v.name.includes('台語')
-                );
+async function speakTaigiOnline(text) {
+    if (!TAIGI_TTS_ENDPOINT) {
+        return false;
+    }
 
-                if (taiwaneseVoice) {
-                    msg.voice = taiwaneseVoice;
-                    msg.lang = taiwaneseVoice.lang;
-                } else {
-                    msg.lang = 'zh-TW';
-                }
-            } else {
-                msg.lang = 'zh-TW';
-            }
+    const taigiText = getTaigiText(text);
 
-            msg.rate = 0.8;
-            window.speechSynthesis.speak(msg);
+    try {
+        window.speechSynthesis.cancel();
+
+        let audioUrl = taigiAudioCache.get(taigiText);
+
+        if (!audioUrl) {
+            const response = await fetch(`${TAIGI_TTS_ENDPOINT}${encodeURIComponent(taigiText)}`);
+            if (!response.ok) throw new Error('台語 TTS 服務無法使用');
+
+            const audioBlob = await response.blob();
+            audioUrl = URL.createObjectURL(audioBlob);
+            taigiAudioCache.set(taigiText, audioUrl);
         }
 
-        function playAll() {
-            speakText(document.getElementById('output').innerText || "請先點選按鈕");
-            resetGaze();
-        }
+        const audio = new Audio(audioUrl);
+        await audio.play();
+        return true;
+    } catch (error) {
+        console.warn('台語線上語音播放失敗，改用瀏覽器語音：', error);
+        return false;
+    }
+}
+	async function speakText(text) {
+    window.speechSynthesis.cancel();
 
+    if (currentLanguage === 'nan-TW') {
+        const played = await speakTaigiOnline(text);
+        if (played) return;
+    }
+
+    const msg = new SpeechSynthesisUtterance(
+        currentLanguage === 'nan-TW' ? getTaigiText(text) : text
+    );
+
+    if (currentLanguage === 'nan-TW') {
+        const voices = window.speechSynthesis.getVoices();
+        const taiwaneseVoice = voices.find(v =>
+            v.lang.includes('nan') ||
+            v.lang.includes('hak') ||
+            v.name.includes('Taiwanese') ||
+            v.name.includes('台語') ||
+            v.name.includes('閩南')
+        );
+
+        if (taiwaneseVoice) {
+            msg.voice = taiwaneseVoice;
+            msg.lang = taiwaneseVoice.lang;
+        } else {
+            msg.lang = 'zh-TW';
+        }
+    } else {
+        msg.lang = 'zh-TW';
+    }
+
+    msg.rate = 0.8;
+    window.speechSynthesis.speak(msg);
+}
+        async function playAll() {
+    await speakText(document.getElementById('output').innerText || "請先點選按鈕");
+    resetGaze();
+}
         /* 修正與瀏覽器原生的名詞衝突 */
         function clearDisplay() {
             document.getElementById('output').innerText = '';
@@ -859,14 +1722,16 @@
         }
 
         function resetGaze() {
-            if (currentHoveredElement) {
-                const progressEl = currentHoveredElement.querySelector('.gaze-progress');
-                if (progressEl) progressEl.style.width = '0%';
-            }
-            currentHoveredElement = null;
-            gazeStartTime = 0;
-        }
+    if (currentHoveredElement) {
+        const progressEl = currentHoveredElement.querySelector('.gaze-progress');
+        if (progressEl) progressEl.style.width = '0%';
 
+        currentHoveredElement.classList.remove('gaze-hover');
+    }
+
+    currentHoveredElement = null;
+    gazeStartTime = 0;
+}
         // 初始化 MediaPipe Face Mesh
         function initAIModel() {
             faceMesh = new FaceMesh({
@@ -1068,11 +1933,12 @@
                     if (duration >= DWEL_TIME) {
                         clickableBtn.click();
                     }
-                } else {
-                    resetGaze();
-                    currentHoveredElement = clickableBtn;
-                    gazeStartTime = Date.now();
-                }
+               } else {
+    resetGaze();
+    currentHoveredElement = clickableBtn;
+    currentHoveredElement.classList.add('gaze-hover');
+    gazeStartTime = Date.now();
+}
             } else {
                 resetGaze();
             }
