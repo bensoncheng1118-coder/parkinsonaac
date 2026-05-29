@@ -1,0 +1,9 @@
+directories:
+  output: dist
+  buildResources: build
+appId: com.pdaac.app
+productName: 帕金森氏症專用 AAC
+win:
+  icon: build/icon.ico
+files: []
+electronVersion: 31.7.7
